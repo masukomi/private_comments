@@ -50,6 +50,17 @@ There can only be one comment for each project + line number + file hash + treei
 
 **Note:** If `project_name_hash` has not been seen before a _new_ project will be automatically created. Because of this it is imperitive that plugins have a reliable and consistent way of persisting or regenerating. 
 
+**Aside:** With regards to the storing and displaying of comments. There are two basic approaches.
+
+1. tie it to the right place in the file with explicit line numbers
+2. tie it to the right place in a file with a diff hunk like this:
+
+```diff
+"@@ -16,33 +16,40 @@ public class Connection : IConnection..."
+```
+
+The second approach allows for better handling of moved lines of code _but_ it leaks information about the code and thus could violate someone's NDA or expose sensitive data to black-hat hackers. 
+
 
 ### Requesting Comments for a file
 
