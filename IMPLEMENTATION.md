@@ -20,7 +20,7 @@ The plugin is expected to run when:
 * request comments for file
 * store new/edited comment
 
-You can see [a flow chart of the data flow here](data_flow.svg)
+You can see [a flow chart of the data flow here](https://raw.githubusercontent.com/masukomi/private_comments/master/data_flow.png)
 
 ### Creating and Editing comments
 
