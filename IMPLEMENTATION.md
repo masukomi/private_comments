@@ -30,9 +30,12 @@ When creating and editing a comment the plugin will send the tool 3 pieces of in
 * the file_path_hash (see below)
 * the line number being commented on
 * the treeish of the commit the comment should be associated with
+* the name of the author (optional)
+* the email of the author (optional)
 
 There can only be one comment for each project + line number + file hash + treeish tuple. If a comment is sent for creation / editing with the same tuple it will overwrite the old one. Everything will be stored in a git repository so old comments will be retrievable.
 
+Plugin creators _may_ choose to send `author_name` and `author_email` fields. If present these will be provided when comments are requested. If not the returned comments will contain null values. 
 
 **Note:** Plugin creators should feel free to send _additional_ data in the hash. Private Comments will not strip this data out and it will return it when you request comments for a file. HOWEVER you _must_ limit this to data needed to support plugin functionality and _not_ anything that could potentially violate a user's NDA or otherwise get them in trouble if it became public. 
 
@@ -89,10 +92,14 @@ While we could pass tuples of `<treeish>` + `<line number>` it would result in a
   "comments": [
                 {"line": 4, 
                  "treeish": "31b8bc225906580b0e2ab78f8144f18ef4769568",
-                 "comment": "investigate how this works" },
+                 "comment": "investigate how this works",
+                 "author_name": null,
+                 "author_email": null},
                 {"line": 22,
                  "treeish": "f9caae240f2ab4543e2c814f107447163144058c",
-                 "comment": "todo: refactor into multiple methods" }
+                 "comment": "todo: refactor into multiple methods",
+                 "author_name": "Marisa Tomei",
+                 "author_email": "mtomei@example.com"}
              ]
 }
 ```
@@ -114,18 +121,22 @@ It is up to the plugin creator to decide how (or if) to display the project name
 
 ## Private Comments Internal Storage
 
-The Private Comments tool will manage a git repository that contains comments for multiple projects the user is working on. Each project has its own folder. Each comment is stored in a separate JSON file. Each file contains the unaltered data passed to it by the plugin. This allows for plugin creators to store additional data with each comment. All data in the JSON in each file will be returned when requesting comments for a file _except_ the project and file hashes. (See example JSON above)
+The Private Comments tool will manage a git repository for each project projects the user is working on. Each project has its own folder. Each comment is stored in a separate JSON file. Each file contains the unaltered data passed to it by the plugin. This allows for plugin creators to store additional data with each comment. All data in the JSON in each file will be returned when requesting comments for a file _except_ the project and file hashes. (See example JSON above)
 
 The name of each JSON file is creating by generating the SHA-256 hash of the file_path_hash, the treeish, and the line_number. 
 
 Here's an example filesystem from a Private Comments installation with one project that has two comments.
 
+
 ```text
-private_comments/
-  |- .git
-      |- many git files....
+~/.config/private_comments/
   |- 7135459ae30c0d5180b623986c420bf20856461cb6b9b860986a22c7654ed755
+      |- .git
       |- ce7ce8b769b6a73f10715e0f5330149e288e23c89b2c30a00ee9cd53591ae56f.json
       |- 9978056c779cd90da8ff74300ed1d8d611a2ae767170d4faf7c0eb705c1e8dfe.json
+  |- d7b6f7659d6cd366fd78126bd99bbe660acf81e46c23a8846e3d70803a72bf4b
+      |- .git
+      |- b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c.json
+      |- 7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730.json
 ```
 
