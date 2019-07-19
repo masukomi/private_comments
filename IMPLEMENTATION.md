@@ -128,6 +128,7 @@ The name of each JSON file is creating by generating the SHA-256 hash of the fil
 
 Here's an example filesystem from a Private Comments installation with one project that has two comments.
 
+NOTE: This file naming convention needs to be changed. The current version forces the tool to "grep" the whole project to find comments that match the requested treeishes. 
 
 ```text
 ~/.config/private_comments/
