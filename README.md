@@ -33,4 +33,6 @@ It is suggested that plugin creators allow users to easily toggle the display of
 **Note:**  
 Future versions may support handling _moved_ code such that your comment moves with the code it's tied to. The initial version will not attempt to address that.
 
+## Implementation Details
 
+Please see [IMPLEMENTATION.md](IMPLEMENTATION.md) for details.
