@@ -127,7 +127,7 @@ The Private Comments tool will manage a git repository for each project projects
 
 The name of each JSON file is creating by generating the SHA-256 hash of the file_path_hash, the treeish, and the line_number. 
 
-Here's an example filesystem from a Private Comments installation with one project that has two comments.
+Here's an example filesystem from a Private Comments installation with two projects that have two comments each.
 
 NOTE: This file naming convention needs to be changed. The current version forces the tool to "grep" the whole project to find comments that match the requested treeishes. 
 
