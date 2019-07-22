@@ -131,9 +131,9 @@ The name of each JSON file is a combination of multiple SHA-256 hashes:
 * file_path_hash
 * line-number
 
-each is joined with a hyphen, and finished off with `.json`
+The treeish is used to create a directory that holds all the `file_path_hash` + `line_number` tuples. E.g.
 
-    <treeish>-<file_path_hash>-<line_number>.json
+    <treeish>/<file_path_hash>-<line_number>.json
 
 SHA 256 hashes are 65 characters long, so we should not run afoul of the maximum number of characters in file names (256). 
 
@@ -145,11 +145,15 @@ NOTE: This file naming convention needs to be changed. The current version force
 ~/.config/private_comments/
   |- 7135459ae30c0d5180b623986c420bf20856461cb6b9b860986a22c7654ed755
       |- .git
-      |- ce7ce8b769b6a73f10715e0f5330149e288e23c89b2c30a00ee9cd53591ae56f-9978056c779cd90da8ff74300ed1d8d611a2ae767170d4faf7c0eb705c1e8dfe-123.json
-      |- 9978056c779cd90da8ff74300ed1d8d611a2ae767170d4faf7c0eb705c1e8dfe-b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c-22.json
+      |- ce7ce8b769b6a73f10715e0f5330149e288e23c89b2c30a00ee9cd53591ae56f
+        |-9978056c779cd90da8ff74300ed1d8d611a2ae767170d4faf7c0eb705c1e8dfe-123.json
+      |- 9978056c779cd90da8ff74300ed1d8d611a2ae767170d4faf7c0eb705c1e8dfe
+        |-b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c-22.json
   |- d7b6f7659d6cd366fd78126bd99bbe660acf81e46c23a8846e3d70803a72bf4b
       |- .git
-      |- b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c-7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730-44.json
-      |- 7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730-ce7ce8b769b6a73f10715e0f5330149e288e23c89b2c30a00ee9cd53591ae56f-56.json
+      |- b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c
+        |-7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730-44.json
+      |- 7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730
+        |-ce7ce8b769b6a73f10715e0f5330149e288e23c89b2c30a00ee9cd53591ae56f-56.json
 ```
 
