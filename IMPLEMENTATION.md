@@ -18,7 +18,7 @@ The plugin is expected to run when:
 ## Commands that can be sent to the tool
 
 * request comments for file
-	* GET `/v1/comments?project_name_hash=<hash_here>&file_path_hash=<hash_here>`
+	* GET `/v1/comments?project_name_hash=<hash_here>&file_path_hash=<hash_here>&treeishes=<a>,<b>,<c>,<d>`
 * store new/edited comment
 
 You can see [a flow chart of the data flow here](https://raw.githubusercontent.com/masukomi/private_comments/master/data_flow.png)
