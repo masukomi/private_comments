@@ -23,6 +23,11 @@
 (define (list->path a-list)
   (string-join a-list (make-string 1 (filepath:path-separator))))
 
+(define listening-port
+  (if (not (get-environment-variable "PRIVATE_COMMENTS_PORT"))
+      5749
+      (string->number (get-environment-variable "PRIVATE_COMMENTS_PORT"))))
+
 (define base-directory
   (let ((home (get-environment-variable "HOME")))
     (if (not (get-environment-variable "PRIVATE_COMMENTS_DIR"))
@@ -212,10 +217,18 @@
                           treeishes )))))
 
 (define (handle-unknown-request request)
-  (send-response
-        headers: (pc-headers)
-        status: 'not-found
-        body: (sprintf "{\"status\": \"UNSUPPORTED\"}" )))
+
+  (let* ((request (current-request))
+         (uri (request-uri request))
+         (path (uri-path uri))
+         (method (request-method request))
+         )
+    (send-response
+            headers: (pc-headers)
+            status: 'not-found
+            body: (sprintf "{\"status\": \"UNSUPPORTED\", 
+                           \"path\": \"~A\",
+                           \"method\": \"~A\"}" path method ))))
 
 (define (shutdown)
   (send-response
@@ -224,6 +237,12 @@
         body: (sprintf "{\"status\": \"SUCCESS\"}" ))
   (format (current-error-port) "SHUTTING DOWN via /shutdown~%")
   (exit))
+
+
+(define (handle-index request)
+  (send-response
+    status: 'ok
+    body: "<h2>Hello</h2> <p>This is a Private Comments REST server. <br />Please see <a href='https://masukomi.github.io/private_comments'>the site</a> for usage instructions.</p>"))
 
 (define (comment-handler continue)
   (let* ((request (current-request))
@@ -239,6 +258,8 @@
             ))
       ((equal? path '(/ "shutdown"))
         (shutdown))
+      ((equal? path '(/ ""))
+        (handle-index request))
       (else (handle-unknown-request request)))
   ); end let
 )
@@ -247,4 +268,6 @@
 
            )
 
+(server-port listening-port)
+(print (sprintf "Loaded at http://localhost:~A" listening-port))
 (start-server)
