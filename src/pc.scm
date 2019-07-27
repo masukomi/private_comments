@@ -232,7 +232,7 @@
          (method (request-method request))
          )
     (cond 
-      ((equal? path '(/ "comments"))
+      ((equal? path '(/ "v1" "comments"))
         (if (equal? method 'GET)
             (handle-comments-get request)
             (handle-comments-post request)
