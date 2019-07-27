@@ -1,0 +1,334 @@
+.ui-material {
+  position: absolute;
+  height: 100%;
+  line-height: 1;
+  border-radius: 0px;
+  border-top-left-radius: inherit;
+  border-bottom-left-radius: inherit;
+  text-align: center;
+  margin: 0em;
+  width: 2.57142857em;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: '';
+  box-shadow: -1px 0px 0px 0px transparent inset;
+  top: 0em;
+  left: 0em;
+}
+
+.icon-container {
+  display: block;
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  text-align: center;
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/*vertical divide*/
+
+.vertical-divide {
+  margin-left: 0;
+  display: inline-block;
+  margin-top: 0;
+  padding-top: 0;
+  list-style-type: none;
+  margin: 1em 0;
+  padding: 0;
+  box-sizing: inherit;
+}
+
+.item-verti {
+  border-left: 1px solid rgba(34, 36, 38, 0.15);
+  padding-right: .5em;
+  margin-left: 0 !important;
+  font-size: .5rem;
+  border-top: none;
+  margin: 0;
+  line-height: .6;
+  display: inline-block;
+  &:first-child {
+    border-left: none;
+  }
+  &:not(first-child) {
+    padding-left: .5em;
+  }
+}
+
+.intro-image {
+  font-size: 2em;
+  width: 2em;
+  height: 2em;
+  border-radius: 500rem;
+  background-color: transparent;
+  margin: 0;
+  border: 0;
+  position: absolute;
+  max-width: 100%;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.img-content {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 0px 0px 0px 5.5em;
+  line-height: 1.14285714em;
+  box-sizing: inherit;
+}
+
+/*horizontal divide*/
+
+.horizontal-divide {
+  margin-top: 0;
+  padding-top: 0;
+  font-size: 1em;
+  list-style-type: none;
+  margin: 1em 0;
+  padding: 0;
+  box-sizing: inherit;
+}
+
+.item-hori {
+  border-bottom: 2px solid rgba(34, 36, 38, 0.15);
+  padding: 1.5em 1.5em;
+  display: list-item;
+  table-layout: fixed;
+  list-style-type: none;
+  list-style-position: outside;
+  line-height: 3em;
+  box-sizing: inherit;
+  color: rgba(0, 0, 0, 0.5);
+  transition: border-color .4s ease-in-out, color .4s ease-in-out;
+  &:first-child {
+    border-top: none;
+  }
+  &:hover {
+    border-color: #38ea92;
+    color: rgba(0, 0, 0, 0.87);
+  }
+}
+
+/*button*/
+
+.ui-button {
+  align-items: center;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  color: currentColor;
+  justify-content: center;
+  background: transparent;
+  transition: color .3s ease-in-out, background .3s ease-in-out;
+  font-family: 'AtlasGroteskRegular', 'Helvetica', sans-serif;
+  font-weight: 700;
+  font-size: 1em;
+  padding: .5em 1.5em;
+  cursor: pointer;
+  &:hover {
+    background: #1de7cb;
+    color: #fff;
+  }
+}
+
+/*icon labels*/
+
+.ui-icon {
+  cursor: default;
+  display: inline-block;
+  min-height: 1em;
+  border: none;
+  vertical-align: baseline;
+  background-color: #E0E1E2 none;
+  color: rgba(0, 0, 0, 0.6);
+  font-family: 'Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  margin: 0em 0.5em 0em 0em;
+  padding: 0.78571429em 1.5em 0.78571429em;
+  font-weight: bold;
+  line-height: 1em;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 0.28571429rem;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-transition: opacity 0.1s ease, background-color 0.1s ease, color 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+  transition: opacity 0.1s ease, background-color 0.1s ease, color 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+  will-change: '';
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  padding-left: 4.07142857em !important;
+  padding-right: 1.5em !important;
+}
+
+@media (max-width: 1024px) {
+  .ui-icon {
+    margin: 1em 0.5em 0em 0em;
+  }
+}
+
+@media (max-width: 1329px) {
+  .ui-icon {
+    margin: 1em 0.5em 0em 0em;
+  }
+}
+
+.feature-video-container {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+  margin-bottom: 2em;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+  margin: 1em 0 2em 0;
+}
+
+.feature-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.content-container {
+  margin-right: $examples-width;;
+  padding: 0 $main-padding;
+  // padding: 0 1.2em;
+  // margin: auto;
+
+  .Grid-cell {
+    figure {
+      // margin: 0;
+      padding: 0;
+    }
+  }
+}
+
+.content img {
+    &.logo {
+      max-width: 20%;
+  }
+}
+
+.feature-content-container {
+  max-width: 75%;
+  margin: auto;
+  // margin-right: 0;
+  padding: 0 1.2em;
+}
+
+.Grid-cell--1of2 {
+  .feature-content-container {
+    width: 550px;
+    margin: auto;
+    padding: 0;
+    // margin-right: 0;
+    // padding: 0 1.2em;
+  }
+}
+
+.feature-center {
+  display: block;
+  margin: auto;
+}
+
+// @media (max-width: $laptop-width) {
+//   .content-container {
+//     &.quick-nav {
+//         margin-right: 0;
+//     }
+//   }
+// }
+
+@media (max-width: $phone-width) {
+  .content-container {
+    margin-right: 0;
+  }
+
+  .content img {
+    &.logo {
+      max-width: 30%;
+  }
+}
+
+  .feature-content-container {
+    max-width: 70%;
+  }
+}
+
+.youtube {
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.youtube img {
+  width: 100%;
+  top: -16.82%;
+  left: 0;
+  opacity: 0.7;
+}
+
+.youtube .play-button {
+  width: 90px;
+  height: 60px;
+  background-color: #333;
+  box-shadow: 0 0 30px rgba( 0,0,0,0.6 );
+  z-index: 1;
+  opacity: 0.8;
+  border-radius: 6px;
+}
+
+.youtube .play-button:before {
+  content: "";
+  border-style: solid;
+  border-width: 15px 0 15px 26.0px;
+  border-color: transparent transparent transparent #fff;
+}
+
+.youtube img,
+.youtube .play-button {
+  cursor: pointer;
+}
+
+.youtube img,
+.youtube iframe,
+.youtube .play-button,
+.youtube .play-button:before {
+  position: absolute;
+}
+
+.youtube .play-button,
+.youtube .play-button:before {
+  top: 50%;
+  left: 50%;
+  transform: translate3d( -50%, -50%, 0 );
+}
+
+.youtube iframe {
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+}

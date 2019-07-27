@@ -1,0 +1,4 @@
+<p id="footnote" style="border-left:5px solid;">
+	<a name="{{ with .Get "name" }}{{ . }}{{ end }}" href="#fnref:{{ .Get "name" }}"><code>[{{ with .Get "number" }}{{ . }}{{ end }}]</code></a>
+	{{ with .Get "text" }}{{ . }}{{ end }}
+</p>

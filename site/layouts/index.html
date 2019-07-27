@@ -1,0 +1,9 @@
+{{define "main"}}
+	{{ range $elem := .Data.Pages.GroupByParam "section_weight" }}
+    	{{ range $pw := ($elem.Pages.ByParam "page_weight") }}
+    		<!--<div class="github-link" data-file="{{ .File.Dir }}{{ .File.TranslationBaseName }}" data-github="https://github.com/pupil-labs/pupil-docs/blob/master/{{ .File.Dir }}{{ .File.TranslationBaseName }}.{{ .File.Ext }}"></div>-->
+    		{{ .Content }}
+    	{{ end }}
+    {{ end }}
+{{end}}
+

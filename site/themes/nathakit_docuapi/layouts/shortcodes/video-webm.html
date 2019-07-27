@@ -1,0 +1,18 @@
+<!-- set key for the image paths -->
+<!-- example input for src = /videos/calibration/pupil-detection/pd.webm -->
+<!-- we want to capture everything but the suffix -->
+<!-- test with $1 or $0 or $2 -->
+{{ with .Get "src" }}
+    {{ $.Scratch.Set "srcBaseName" (replaceRE "(.*)[.](webm|mov|jpe?g)" "$1" . ) }}
+{{ end }}
+
+
+<div class="feature-content-container">
+  <div class="feature-video-container" >
+    <video class="feature-video" poster="{{ with .Scratch.Get "srcBaseName" }}{{ . }}{{ end }}.webp" title="Click to pause" alt="video">
+      <source src="{{ with .Scratch.Get "srcBaseName" }}{{ . }}{{ end }}.webm" type="video/webm" >
+      <source src="{{ with .Scratch.Get "srcBaseName" }}{{ . }}{{ end }}.mp4" type="video/mp4">
+      <a href="{{ with .Scratch.Get "srcBaseName" }}{{ . }}{{ end }}.mp4" download>Download</a>
+    </video>
+  </div>
+</div>

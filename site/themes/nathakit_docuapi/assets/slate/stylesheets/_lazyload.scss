@@ -1,0 +1,109 @@
+.figure-container {
+  max-width: 75%;
+  margin: auto;
+
+  &.img-m {
+    max-width: 50%;
+  }
+
+  &.img-s {
+    max-width: 40%;
+  }
+
+  &.img-xs {
+    max-width: 18%;
+  }
+}
+
+.Grid--1of3>.Grid-cell {
+  .figure-container {
+    max-width: 100%;
+  }
+}
+
+// images in grid containers
+.Grid-cell--1of2 {
+  .figure-container {
+    &.img-m {
+      width: 250px;
+    }
+  }
+}
+
+.Grid--1of3>.Grid-cell {
+  .figure-container {
+    width: 165px;
+  }
+}
+
+// containers
+.lazy-img {
+  margin: auto;
+  overflow: hidden;
+}
+
+.ratio-box {
+  position: relative;
+  height: 0;
+  display: block;
+}
+
+.ratio-box img,
+.ratio-box iframe,
+.ratio-box video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.img-small {
+  filter: blur(25px);
+  transform: scale(1);
+}
+
+.img-small.lazyloaded {
+  filter: blur(0);
+  transform: scale(1);
+}
+
+.img-large {
+  opacity: 0;
+}
+
+.img-large.lazyloaded {
+  opacity: 1;
+  transition: opacity .1s linear;
+}
+
+
+@media (max-width: $phone-width) {
+  .figure-container {
+    max-width: 70%;
+  }
+
+  .Grid--1of3>.Grid-cell {
+    .figure-container {
+      max-width: 65%;
+      // min-width: 230px;
+    }
+  }
+  .figure-container {
+
+    &.img-m {
+      max-width: 56%;
+      // min-width: 250px;
+    }
+
+    &.img-s {
+      max-width: 45%;
+    }
+
+    &.img-xs {
+      max-width: 20%;
+    }
+  }
+}
+

@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+    {{ partial "header.html" . }}
+</head>
+<body class="index" data-languages="{{ with .Site.Params.language_tabs  }}[{{ range $i,$e := . }}{{- if $i -}}, {{ end -}}{{ printf " %q " $e.key }}{{end}}]{{ end }}">
+    <div class="tocify-wrapper">
+        <!-- <div align="center" style="margin:2em;">
+            <a href="/" class="logotype" style="font-size: 3em;color:#ffffff;">pupil docs</a>
+        </div> -->
+        <div class="tocify-inner">
+            {{ with .Site.Params.language_tabs }}
+            <div class="lang-selector">
+                {{ range . }}
+                <a href="#" data-language-name="{{ .key }}">{{ .name  }}</a>
+                {{ end }}
+            </div>
+            {{ end }} 
+            {{ if .Site.Params.search }}
+            <div class="search">
+                <input type="text" class="search" id="input-search" placeholder="search">
+            </div>
+            <ul class="search-results"></ul>
+            {{ end }}
+            <div id="toc">
+            </div>
+            {{ if .Site.IsMultiLingual }}
+            <div class="toc-footer">
+                <label for="version-selector">Version: </label>
+                <select name="version-selector" id="version-selector">
+                    {{ range $i, $elem := .Site.Languages }}
+                        {{ if eq $elem.Weight 1 }}
+                            <option value="">{{ $elem.Lang }}</option>
+                        {{ else }}
+                            <option value="{{ $elem.Lang }}">{{ $elem.Lang }}</option>                            
+                        {{ end }}
+                    {{ end }}
+                </select>
+            </div>
+            {{ end }}
+        </div>
+    </div>
+    <main>
+        <div id="header" class="main-header-bg">
+            <button href="#" id="menu-button" class="main-header-menu-button icons">menu</button>
+            <!-- <button href="#" id="fold-button" class="main-header-menu-button icons">view_column</button> -->
+            <div class="main-header-logo">
+                <nav>
+                    <a href="/" class="logotype">pupil docs</a>
+                </nav>
+            </div>
+        </div>
+        <div class="page-wrapper">
+            <div class="dark-box"></div>
+            <div class="content">
+                {{block "main" .}}This is the main content.{{end}}
+            </div>
+            <div class="dark-box">
+                {{ with .Site.Params.language_tabs }}
+                <div class="lang-selector">
+                    {{ range . }}
+                    <a href="#" data-language-name="{{ .key }}">{{ .name  }}</a>
+                    {{ end }}
+                </div>
+                {{ end }}
+            </div>
+        </div>
+    </main>
+    {{ partial "footer.html" . }}
+</body>
+</html>

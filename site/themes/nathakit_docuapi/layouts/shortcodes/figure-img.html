@@ -1,0 +1,3 @@
+<figure class="{{ with .Get "figure-class" }}{{ . }}{{ end }}">
+	<img src="{{ with .Get "src" }}{{ . }}{{ end }}" class="{{ with .Get "img-class" }}{{ . }}{{ end }}" width="{{ with .Get "width" }}{{ . }}{{ end }}" height="{{ with .Get "height" }}{{ . }}{{ end }}" alt="{{ with .Get "alt" }}{{ . }}{{ end }}">
+</figure>

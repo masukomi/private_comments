@@ -1,0 +1,65 @@
+.site {
+  overflow-y:scroll;
+}
+
+.docs {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.docs-body {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+  color: #000;
+  background: #fff;
+  transition: left 250ms ease 0ms;
+}
+
+.site-transform {
+  margin-top: -90px;
+}
+
+.site-content-container {
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: 0 60px;
+}
+
+
+.content {
+  a {
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+    color: $a-links;
+  }
+  h4 {
+    cursor: auto;
+    text-decoration: none;
+  }
+}
+
+
+h2,h3 {
+  .anchor,
+  .github-edit {
+  color: lightgray; 
+  padding: 0em 0em 0em 0.5em;
+  font-size: 24px;
+ }
+}
+
+
+h1 {
+  .anchor,
+  .github-edit {
+  color: #868686; 
+  padding: 0em 0em 0em 0.5em;
+  font-size: 28px;
+  }
+}
