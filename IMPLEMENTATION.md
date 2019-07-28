@@ -48,7 +48,7 @@ Plugin creators _may_ choose to send `author_name` and `author_email` fields. If
   "project_name_hash": "7135459ae30c0d5180b623986c420bf20856461cb6b9b860986a22c7654ed755",
   "file_path_hash": "faf3e6fc36b8524dad3aa4a317e734623f0dfcf6934a659015827406ebfb0c87",
   "treeish": "31b8bc225906580b0e2ab78f8144f18ef4769568",
-  "line number": 4,
+  "line_number": 4,
   "comment": "comment text here"
 }
 ```
