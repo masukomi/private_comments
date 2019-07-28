@@ -270,4 +270,5 @@
 
 (server-port listening-port)
 (print (sprintf "Loaded at http://localhost:~A" listening-port))
+(print "To shut down the server either use ^C or vist /shutdown")
 (start-server)
