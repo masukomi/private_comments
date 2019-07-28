@@ -17,11 +17,13 @@ page_weight: 1
 
 Private comments allows you to leave "private comments" on specific lines of a codebase that are not stored _in_ the codebase. 
 
-Imagine being dropped into a new codebase and being able to comment the heck out of it without worry about about cluttering the codebase with your stream of consciousness thoughts as you figure things out. Imagine working on a client's codebase and having to worry about what you say, or who sees it. Unlimited todos, unrestricted thought. 
+Imagine being dropped into a new codebase and having the freedom to leave whatever todo items and breadcrumbs you want without cluttering the codebase. Imagine working on a client's codebase and not having to worry about what you say, or who sees it. 
 
 Even better, Private Comments is guaranteed to not leek any secrets about the codebase you're working on. We can't guarantee what you write won't, but the closest the system comes is reusing git treeishes from the repo you're commenting on.
 
-Thanks to git, you can see the old comments from historical versions of your files, and outdated comments disappear when the lines they comment on go away.
+Thanks to git, you can see the old comments from historical versions of your files, and outdated comments disappear when the lines they comment on change or go away. 
+
+This site explains how it works, and the APIs you'll need to work with in order to create a plugin to support it in your favorite editor. For details on installing the the Private Comments application check out [the GitHub repository](https://github.com/masukomi/private_comments).
 
 ## How Does It Work?
 
