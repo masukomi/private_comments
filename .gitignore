@@ -1,2 +1,6 @@
 .vscode
 tags
+site/public
+src/private_comments
+src/private_comments.link
+src/private_comments*.tgz
