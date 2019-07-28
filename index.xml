@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Private Comments</title>
+    <link>https://masukomi.github.io/private_comments/</link>
+    <description>Recent content on Private Comments</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    
+	<atom:link href="https://masukomi.github.io/private_comments/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title></title>
+      <link>https://masukomi.github.io/private_comments/comment/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://masukomi.github.io/private_comments/comment/</guid>
+      <description>Comment A comment object contains a collection of information about a specific comment
+ The SHA 256 hash of its project&amp;rsquo;s name The commit treeish this particular comment is associated with. The SHA 256 hash of the path to the file this comment was left on. The line number this comment is associated with. The comment itself  In addition to this, the JSON you send along with you comment can include any other metadata your plugin needs to do its job in displaying this comment.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://masukomi.github.io/private_comments/getting_started/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://masukomi.github.io/private_comments/getting_started/</guid>
+      <description>Getting Started  What is Private Comments How does it work? Writing Editor Plugins  Core Concepts Adding / Updating A Comment Requesting Comments For a File   What Is Private Comments Private comments allows you to leave &amp;ldquo;private comments&amp;rdquo; on specific lines of a codebase that are not stored in the codebase.
+Imagine being dropped into a new codebase and having the freedom to leave whatever todo items and breadcrumbs you want without cluttering the codebase.</description>
+    </item>
+    
+  </channel>
+</rss>

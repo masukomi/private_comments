@@ -1,0 +1,356 @@
+<!doctype html>
+<html>
+<head>
+	<meta name="generator" content="Hugo 0.55.6" />
+    <meta charset="utf-8">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Private Comments</title>
+    <link href='/private_comments/slate/stylesheets/monokai.css' rel="stylesheet" media="screen" />
+<link href='/private_comments/slate/stylesheets/screen.css' rel="stylesheet" media="screen" />
+<link href='/private_comments/slate/stylesheets/print.css' rel="stylesheet" media="print" />
+
+    
+<script src='/private_comments/slate/javascripts/all.js'></script>
+
+    
+</head>
+<body class="index" data-languages="[ &#34;javascript&#34; ,  &#34;shell&#34; ]">
+    <a href="#" id="nav-button">
+        <span>
+        NAV
+        <img src='/private_comments/slate/images/navbar.png'/>
+      </span>
+    </a>
+    <div class="tocify-wrapper">
+        
+         <img src='/private_comments/images/logo.png' style="margin: auto;"/>
+
+        
+        <div class="lang-selector">
+            
+            <a href="#" data-language-name="javascript">JavaScript</a>
+            
+            <a href="#" data-language-name="shell">Shell</a>
+            
+        </div>
+         
+        
+        <div class="search">
+            <input type="search" class="search" id="input-search" placeholder='Search'>
+        </div>
+        <ul class="search-results"></ul>
+        
+        <div id="toc">
+        </div>
+         
+        
+        <ul class="toc-footer">
+            
+            <li>Hugo Theme by <a href="https://github.com/bep" target="_blank">bep</a></li>
+            
+        </ul>
+        
+        
+    </div>
+    <div class="page-wrapper">
+        <div class="dark-box"></div>
+        <div class="content">
+            
+	
+    	
+    		
+    		
+
+<h1 id="getting-started">Getting Started</h1>
+
+<ul>
+<li><a href="#what-is-private-comments">What is Private Comments</a></li>
+<li><a href="#how-does-it-work">How does it work?</a></li>
+<li><a href="#writing-editor-plugins">Writing Editor Plugins</a>
+
+<ul>
+<li><a href="#core-concepts">Core Concepts</a></li>
+<li><a href="#adding-updating-a-comment">Adding / Updating A Comment</a></li>
+<li><a href="#requesting-comments-for-a-file">Requesting Comments For a File</a></li>
+</ul></li>
+</ul>
+
+<h2 id="what-is-private-comments">What Is Private Comments</h2>
+
+<p>Private comments allows you to leave &ldquo;private comments&rdquo; on specific lines of a codebase that are not stored <em>in</em> the codebase.</p>
+
+<p>Imagine being dropped into a new codebase and having the freedom to leave whatever todo items and breadcrumbs you want without cluttering the codebase. Imagine working on a client&rsquo;s codebase and not having to worry about what you say, or who sees it.</p>
+
+<p>Even better, Private Comments is guaranteed to not leek any secrets about the codebase you&rsquo;re working on. We can&rsquo;t guarantee what you write won&rsquo;t, but the closest the system comes is reusing git treeishes from the repo you&rsquo;re commenting on.</p>
+
+<p>Thanks to git, you can see the old comments from historical versions of your files, and outdated comments disappear when the lines they comment on change or go away.</p>
+
+<p>This site explains how it works, and the APIs you&rsquo;ll need to work with in order to create a plugin to support it in your favorite editor. For details on installing the the Private Comments application check out <a href="https://github.com/masukomi/private_comments" target="_blank">the GitHub repository</a>.</p>
+
+<h2 id="how-does-it-work">How Does It Work?</h2>
+
+<p>Private Comments is a tiny little REST server. A plugin for your favorite editor sends it new and edited comments to save, and requsts a list of existing comments for files you&rsquo;re working on.</p>
+
+<p>Comments are stored in a separate git repo for each project. If you want, you can share your comments repo with teammates.</p>
+
+<p>Please see <a href="https://github.com/masukomi/private_comments/#readme" target="_blank">the GitHub README</a> for instructions on how to install and run the Private Comments server.</p>
+
+<h2 id="writing-editor-plugins">Writing Editor Plugins</h2>
+
+<p>Overall, writing a plugin that works with Private Comments is pretty simple, and you only need to support two endpoints which I&rsquo;ll cover in a moment. You&rsquo;ll likely spend the majority of your time figuring out how to display the comments and let users create or edit them.</p>
+
+<p>How you choose to display, and edit comments is entirely up to you. Spend time focusing on usability and style. I&rsquo;d also recommend that you make it easy to toggle the display of comments entirely.</p>
+
+<p>Once you&rsquo;ve released your comment, add it to the wiki.</p>
+
+<h3 id="core-concepts">Core Concepts</h3>
+
+<p>In order to prevent Private Comments from leaking secrets most of the data you provide to PC will be SHA 256 hashes.</p>
+
+<p>A comment requires 3 pieces of information to tie it to the right place in your codebase:</p>
+
+<ul>
+<li>A SHA 256 hash of the project name</li>
+<li>The commit <a href="https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddeftree-ishatree-ishalsotreeish" target="_blank">treeish</a> this particular comment is associated with.</li>
+<li>A SHA 256 hash of the path to the file this comment was left on.</li>
+<li>The line number this comment is associated with.</li>
+</ul>
+
+<h4 id="project-names">Project Names</h4>
+
+<p>It doesn&rsquo;t matter if the project name you use for the hash is auto-generated or comes from user input. It is <em>critical</em> that you have a mechanism that allows for users with multiple computers to use the <em>exact</em> same project name on each device. Different names will result in different project name hashes, and that will prevent them from syncing comments between devices.</p>
+
+<p>The simplest solution to this is to let users see the name you&rsquo;re using for the current project. If your editor supports the concept of named projects, that would be the obvious thing to use, but the must be able to override it in your plugin in case they&rsquo;ve named the project differently on the other device(s).</p>
+
+<p>Another simple solution is to store it with <code>git config</code> on a per repository basis. For example:</p>
+<div class="highlight"><pre class="chroma"><code class="language-shell" data-lang="shell">$ git config --add private-comments.project-name <span class="s2">&#34;my_project_name&#34;</span>
+$ git config --get private-comments.project-name
+my_project_name</code></pre></div>
+<h3 id="adding-updating-a-comment">Adding / Updating A Comment</h3>
+
+<p>Prerequisite: The line of code being commented on must have been committed first before Private Comments can persist the comment. Comments on new lines must be managed by your plugin until the new line has been committed.</p>
+
+<p>Prerequisite: You must have the ability to run <a href="https://git-scm.com/docs/git-blame" target="_blank">git blame</a> on the file. You&rsquo;ll need this to know which lines of the file come from which git commits. More specifically, you&rsquo;ll need to know which treeish each line associated with.</p>
+
+<p>Gather up the things listed in Core Concepts along with the comment, line number, and the treeish of the line being commented on. Then send a <code>POST</code> to the <code>/v1/comments</code> endpoint with JSON.</p>
+
+<p><strong>Note:</strong> If <code>project_name_hash</code> has not been seen before a <em>new</em> project will be automatically created, and a new git repository will be initialized. Because of this it is imperative that plugins have a reliable and consistent way of persisting or regenerating project name hashes.</p>
+
+<h3 id="requesting-comments-for-a-file">Requesting Comments for a file</h3>
+
+<p>Prerequisite: You must have the ability to run <a href="https://git-scm.com/docs/git-blame" target="_blank">git blame</a> on the file. You&rsquo;ll need this to know which lines of the file come from which git commits. More specifically, you&rsquo;ll need to know which treeish each line associated with.</p>
+
+<p>Private Comments retrieves comments for you on a per-file basis. Whenever users start displaying a new file, you can sent PC a <code>GET</code> request to <code>/v1/comments</code> with the required info. What you&rsquo;ll get back is a list of all the comments left on this file, for all the treeishes in the file.</p>
+
+<p>Use Git Blame to gather up all the treeishes that make up your file. Put together a unique list,</p>
+
+<p><strong>Note:</strong> You <em>may</em> also receive comments for lines that no-longer exist in the file. For example. Lets say your &ldquo;cars.rb&rdquo; file has had two commits. Lines 1-10 were added in the first commit. Your user left a comment on line 1 and a comment on line 7. Lines 5-10 were then replaced in a second commit.</p>
+
+<p>When your user opens the file <code>git blame</code> tells you that the file is comprised of commits from 2 treeishes. You gather those treeishes up along with the other core concepts and pass them off to PC. Because that first commit&rsquo;s treeish is in the list for this file PC will give you <em>both</em> of the comments for that treeish. The response data will let you know what line and treeish each comment is for. Just throw out any comments where the line number is no longer associated with treeish that came back with the comment.</p>
+
+<p>Summarized Process:</p>
+
+<ul>
+<li>run git blame</li>
+<li>make an internal map of line number to treeish.</li>
+<li>generate the required SHA 256 hashes</li>
+<li>pass the hashes + a list of unique treeishes to Private Comments.</li>
+<li>iterate over the comments that returned
+
+<ul>
+<li>check if the line number of the comment maps to the same treeish as your internal map and display it if it does.</li>
+</ul></li>
+</ul>
+
+<h2 id="shutting-down-the-server">Shutting down the server</h2>
+
+<p>Should you need it, you can send a request to <code>/shutdown</code> to shut down the server. However, it is <em>strongly</em> recommended that you leave it running. Your user may be using multiple editors</p>
+
+    	
+    
+    	
+    		
+    		
+
+<h1 id="comment">Comment</h1>
+
+<p>A comment object contains a collection of information about a specific comment</p>
+
+<ul>
+<li>The SHA 256 hash of its project&rsquo;s name</li>
+<li>The commit <a href="https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddeftree-ishatree-ishalsotreeish" target="_blank">treeish</a> this particular comment is associated with.</li>
+<li>The SHA 256 hash of the path to the file this comment was left on.</li>
+<li>The line number this comment is associated with.</li>
+<li>The comment itself</li>
+</ul>
+
+<p>In addition to this, the JSON you send along with you comment can include any other metadata your plugin needs to do its job in displaying this comment. It is <em>stronly</em> recommended that you don&rsquo;t include file names, class names, or anything else from the code that could leak secrets that might violate someone&rsquo;s NDA.</p>
+
+<p>The comment itself is just random text to Private Comments. It can be plain text, or encrypted. Silently encrypting and decrypting it would be an excellent layer of protection for your users.</p>
+
+<p><strong>Note:</strong> The file path hash must be the full path from the project root to the file plus the file name. Without the full path there may be hash collisions for two files with the same name, which will result in returning, or overwriting comments for the wrong file.</p>
+
+<h2 id="comment-parameters">Comment Parameters</h2>
+
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>project_name_hash</td>
+<td>String</td>
+<td>true</td>
+<td>A SHA 256 hash of the project name</td>
+</tr>
+
+<tr>
+<td>file_path_hash</td>
+<td>String</td>
+<td>true</td>
+<td>A SHA 256 hash of the path to the file from the root of the project.</td>
+</tr>
+
+<tr>
+<td>treeish</td>
+<td>String</td>
+<td>true</td>
+<td>The treeish that created the line under comment (from git blame)</td>
+</tr>
+
+<tr>
+<td>line_number</td>
+<td>Integer</td>
+<td>true</td>
+<td>An integer indicating the line number being commented on</td>
+</tr>
+
+<tr>
+<td>comment</td>
+<td>String</td>
+<td>true</td>
+<td>The comment left by the user</td>
+</tr>
+
+<tr>
+<td>anything else</td>
+<td>Any</td>
+<td>false</td>
+<td>Literally any other metadata your plugin wants to store about this comment</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="comment-routes">Comment Routes</h2>
+
+<ul>
+<li><a href="#add-update-a-comment-route">Add / Update a comment</a></li>
+<li><a href="#retrieve-comments-for-a-file-route">Retrieve comments for a file</a></li>
+</ul>
+
+<h2 id="add-update-a-comment-route">Add / Update a comment route</h2>
+<div class="highlight"><pre class="chroma"><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span>
+  <span class="s2">&#34;project_name_hash&#34;</span><span class="o">:</span> <span class="s2">&#34;7135459ae30c0d5180b623986c420bf20856461cb6b9b860986a22c7654ed755&#34;</span><span class="p">,</span>
+  <span class="s2">&#34;file_path_hash&#34;</span><span class="o">:</span> <span class="s2">&#34;faf3e6fc36b8524dad3aa4a317e734623f0dfcf6934a659015827406ebfb0c87&#34;</span><span class="p">,</span>
+  <span class="s2">&#34;treeish&#34;</span><span class="o">:</span> <span class="s2">&#34;777a58e942164e94964999bcc7cd20bbcda28fe55ac38be28e530f58ddad5ad8&#34;</span><span class="p">,</span>
+  <span class="s2">&#34;line_number&#34;</span><span class="o">:</span> <span class="mi">4</span><span class="p">,</span>
+  <span class="s2">&#34;comment&#34;</span><span class="o">:</span> <span class="s2">&#34;comment text here&#34;</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">xhr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">XMLHttpRequest</span><span class="p">();</span>
+<span class="nx">xhr</span><span class="p">.</span><span class="nx">withCredentials</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+
+<span class="nx">xhr</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&#34;readystatechange&#34;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">readyState</span> <span class="o">===</span> <span class="k">this</span><span class="p">.</span><span class="nx">DONE</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">responseText</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">xhr</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s2">&#34;POST&#34;</span><span class="p">,</span> <span class="s2">&#34;http://localhost:5749/v1/comments&#34;</span><span class="p">);</span>
+<span class="nx">xhr</span><span class="p">.</span><span class="nx">setRequestHeader</span><span class="p">(</span><span class="s2">&#34;content-type&#34;</span><span class="p">,</span> <span class="s2">&#34;application/json&#34;</span><span class="p">);</span>
+
+<span class="nx">xhr</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="chroma"><code class="language-shell" data-lang="shell">curl --request POST <span class="se">\
+</span><span class="se"></span>  --url http://localhost:5749/v1/comments <span class="se">\
+</span><span class="se"></span>  --header <span class="s1">&#39;content-type: application/json&#39;</span> <span class="se">\
+</span><span class="se"></span>  --data <span class="s1">&#39;{
+</span><span class="s1">  &#34;project_name_hash&#34;: &#34;7135459ae30c0d5180b623986c420bf20856461cb6b9b860986a22c7654ed755&#34;,
+</span><span class="s1">  &#34;file_path_hash&#34;: &#34;faf3e6fc36b8524dad3aa4a317e734623f0dfcf6934a659015827406ebfb0c87&#34;,
+</span><span class="s1">  &#34;treeish&#34;: &#34;777a58e942164e94964999bcc7cd20bbcda28fe55ac38be28e530f58ddad5ad8&#34;,
+</span><span class="s1">  &#34;line_number&#34;: 4,
+</span><span class="s1">  &#34;comment&#34;: &#34;comment text here&#34;
+</span><span class="s1">}&#39;</span></code></pre></div>
+<blockquote>
+<p>The code above will return JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&#34;status&#34;</span><span class="p">:</span> <span class="s2">&#34;SUCCESS&#34;</span><span class="p">,</span>
+  <span class="nt">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;faf3e6fc36b8524dad3aa4a317e734623f0dfcf6934a659015827406ebfb0c87-4.json written&#34;</span>
+<span class="p">}</span></code></pre></div>
+<p>This endpoint creates or updates a single company object.</p>
+
+<h4 id="http-request">HTTP Request</h4>
+
+<p><code>POST /v1/comments</code></p>
+
+<h2 id="retrieve-comments-for-a-file-route">Retrieve comments for a file route</h2>
+<div class="highlight"><pre class="chroma"><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">xhr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">XMLHttpRequest</span><span class="p">();</span>
+<span class="nx">xhr</span><span class="p">.</span><span class="nx">withCredentials</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+
+<span class="nx">xhr</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s2">&#34;readystatechange&#34;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">readyState</span> <span class="o">===</span> <span class="k">this</span><span class="p">.</span><span class="nx">DONE</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">responseText</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">xhr</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s2">&#34;GET&#34;</span><span class="p">,</span> <span class="s2">&#34;http://localhost:5749/v1/comments?project_name_hash&amp;file_path_hash=faf3e6fc36b8524dad3aa4a317e734623f0dfcf6934a659015827406ebfb0c87&amp;treeishes=777a58e942164e94964999bcc7cd20bbcda28fe55ac38be28e530f58ddad5ad8%2C263fe246fb49b562e501427470efed926dc11cb9f8909be5b1987d3f2adff712&#34;</span><span class="p">);</span>
+
+<span class="nx">xhr</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div><div class="highlight"><pre class="chroma"><code class="language-shell" data-lang="shell">curl --request GET <span class="se">\
+</span><span class="se"></span>  --url <span class="s1">&#39;http://localhost:5749/v1/comments?project_name_hash=7135459ae30c0d5180b623986c420bf20856461cb6b9b860986a22c7654ed755&amp;file_path_hash=faf3e6fc36b8524dad3aa4a317e734623f0dfcf6934a659015827406ebfb0c87&amp;treeishes=777a58e942164e94964999bcc7cd20bbcda28fe55ac38be28e530f58ddad5ad8%2C263fe246fb49b562e501427470efed926dc11cb9f8909be5b1987d3f2adff712&#39;</span></code></pre></div>
+<blockquote>
+<p>The code above will return JSON structured like this:</p>
+</blockquote>
+<div class="highlight"><pre class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&#34;project_name_hash&#34;</span><span class="p">:</span> <span class="s2">&#34;7135459ae30c0d5180b623986c420bf20856461cb6b9b860986a22c7654ed755&#34;</span><span class="p">,</span>
+  <span class="nt">&#34;file_path_hash&#34;</span><span class="p">:</span> <span class="s2">&#34;faf3e6fc36b8524dad3aa4a317e734623f0dfcf6934a659015827406ebfb0c87&#34;</span><span class="p">,</span>
+  <span class="nt">&#34;comments&#34;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="nt">&#34;treeish&#34;</span><span class="p">:</span> <span class="s2">&#34;777a58e942164e94964999bcc7cd20bbcda28fe55ac38be28e530f58ddad5ad8&#34;</span><span class="p">,</span>
+      <span class="nt">&#34;line_number&#34;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+      <span class="nt">&#34;comment&#34;</span><span class="p">:</span> <span class="s2">&#34;comment text here&#34;</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span></code></pre></div>
+<h4 id="http-request-1">HTTP Request</h4>
+
+<p><code>GET /v1/comments?project_hash_name={project_hash}&amp;file_path_hash={file_path_hash}&amp;treeishes={comma separated list of treeishes}</code></p>
+
+    	
+    
+
+        </div>
+        <div class="dark-box">
+            
+            <div class="lang-selector">
+                
+                <a href="#" data-language-name="javascript">JavaScript</a>
+                
+                <a href="#" data-language-name="shell">Shell</a>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+</body>
+</html>
