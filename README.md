@@ -26,6 +26,14 @@ To launch it just run `private_comments` Next, access the endpoints as described
 
 **Note:** You'll have to add the executable to your [PATH](https://www.techrepublic.com/article/how-to-add-directories-to-your-path-in-linux/) if you didn't install it with homebrew.
 
+### Specifying a Port
+By default private comments runs on port `5749`. To change this, set the `PRIVATE_COMMENTS_PORT` environment variable to the desired port.
+
+### Specifying a Directory
+By default `private_comments` will store its data in `~/.config/private_comments`
+
+To specify another directory just set the `PRIVATE_COMMENTS_DIR` environment variable to a valid path.
+
 ## Building From Source
 
 Once you've cloned this repo you'll need to install [Chicken Scheme](https://www.call-cc.org/) and then run the `install_chicken_eggs.sh` script in the `src` directory. 
