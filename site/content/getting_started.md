@@ -19,7 +19,7 @@ Private comments allows you to leave "private comments" on specific lines of a c
 
 Imagine being dropped into a new codebase and having the freedom to leave whatever todo items and breadcrumbs you want without cluttering the codebase. Imagine working on a client's codebase and not having to worry about what you say, or who sees it. 
 
-Even better, Private Comments is guaranteed to not leek any secrets about the codebase you're working on. We can't guarantee what you write won't, but the closest the system comes is reusing git treeishes from the repo you're commenting on.
+Even better, Private Comments is guaranteed to not leak any secrets about the codebase you're working on. We can't guarantee what you write won't, but the closest the system comes is reusing git treeishes from the repo you're commenting on.
 
 Thanks to git, you can see the old comments from historical versions of your files, and outdated comments disappear when the lines they comment on change or go away. 
 
