@@ -21,7 +21,7 @@ The plugin is expected to run when:
 	* GET `/v1/comments?project_name_hash=<hash_here>&file_path_hash=<hash_here>&treeishes=<a>,<b>,<c>,<d>`
 * store new/edited comment
 
-You can see [a flow chart of the data flow here](https://raw.githubusercontent.com/masukomi/private_comments/master/data_flow.png)
+You can see [a flow chart of the data flow here](https://raw.githubusercontent.com/masukomi/private_comments/master/docs/instructional/data_flow.png)
 
 ### Creating and Editing comments
 
