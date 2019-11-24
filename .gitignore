@@ -2,5 +2,10 @@
 tags
 site/public
 src/private_comments
-src/private_comments.link
-src/private_comments*.tgz
+src/pc
+src/*.tgz
+src/*.so
+src/*.o
+src/*.link
+.DS_Store
+src/*.tgz
