@@ -29,12 +29,12 @@ The comment itself is just random text to Private Comments. It can be plain text
 | comment | String | true | The comment left by the user |
 | anything else | Any | false | Literally any other metadata your plugin wants to store about this comment |
 
-## Comment Routes
+## Comment Endpoints
 
-* [Add / Update a comment](#add-update-a-comment-route)
-* [Retrieve comments for a file](#retrieve-comments-for-a-file-route)
+* [Add / Update a comment](#add-update-a-comment-endpoint)
+* [Retrieve comments for a file](#retrieve-comments-for-a-file-endpoint)
 
-## Add / Update a comment route
+## Add / Update a comment endpoint
 
 ```javascript
 var data = JSON.stringify({
@@ -82,13 +82,13 @@ curl --request POST \
 }
 ```
 
-This endpoint creates or updates a single company object.
+This endpoint creates or updates a single company object and takes the full list of parameters noted above.
 
 #### HTTP Request
 
 `POST /v1/comments`
 
-## Retrieve comments for a file route
+## Retrieve comments for a file endpoint
 
 ```javascript
 var data = null;
@@ -129,6 +129,18 @@ curl --request GET \
 ```
 
 #### HTTP Request
+
+This endpoint retrieves all the comments relevant to the treeishes in the current verison of the specified file. **Note that this may contain comments that are associated with a _treeish_ that is still in your file, but for a line that has since been replaced with another commit.**
+
+For example: Your first commit adds all the lines of a file. All lines of this file are associated with the same treeish. Then you leave a private comment on the 1st line of the file. The top half of the file is then changed in a subsequent commit. The lines in the bottom half of the file would be associated with the first commit still. Becaues you pass all relevant treeishes, the server would return the comment from the first line, because it was tied with a treeish that is still in the file, BUT that comment would no longer be relevant to the version of the file the user was viewing. It's up to the consumer of the API to address that.
+
+This endpoint expects the following query parameters:
+
+| Parameter| Type | Description |
+|----------|------|-------------|
+| `project_hash_name` | String | (see above) |
+| `file_path_hash` | String | (see above)|
+| `treeishes` | String | a comma-separated list of treeishes relevant to the current version of the file (generated via [git blame](https://www.git-scm.com/docs/git-blame)). |
 
 `GET /v1/comments?project_hash_name={project_hash}&file_path_hash={file_path_hash}&treeishes={comma separated list of treeishes}`
 

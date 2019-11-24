@@ -38,9 +38,13 @@ Please see [the GitHub README](https://github.com/masukomi/private_comments/#rea
 
 Overall, writing a plugin that works with Private Comments is pretty simple, and you only need to support two endpoints which I'll cover in a moment. You'll likely spend the majority of your time figuring out how to display the comments and let users create or edit them. 
 
+Check out [this diagram](images/data_flow.svg) for a high level overview of the process for viewing and creating comments.
+
+
 How you choose to display, and edit comments is entirely up to you. Spend time focusing on usability and style. I'd also recommend that you make it easy to toggle the display of comments entirely. 
 
-Once you've released your comment, add it to the wiki.
+Once you've released your comment, add it to [the wiki](https://github.com/masukomi/private_comments/wiki).
+
 
 ### Core Concepts
 In order to prevent Private Comments from leaking secrets most of the data you provide to PC will be SHA 256 hashes.
