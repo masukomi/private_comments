@@ -193,69 +193,7 @@
 ;   comment: "comment text here"
 ; }
 (define (handle-comments-post request)
-  ; TODO
-  ; * nice error if invalid json
-  ; * test if project dir exists
-  ;   * create if needed
-  ; * test if treeish dir exists
-  ;   * create if needed
-  (let ((json (request->data request)))
-
-
-
-    ; ( (project_name_hash . 1aabeb680a9ed12e4fb53d529513a2aa58341f5cfd0f7790c96388cbddbd5493)
-    ;   (file_path_hash . 00c5f3f22a7c1dc3b2e377b650276b6027642ba5b21dc3bb132997f39065870a)
-    ;   (treeish . #f)
-    ;   (line_number . 4)
-    ;   (user_name . masukomi)
-    ;   (user_email . masukomi@masukomi.org)
-      ; (comment . my first comment))
-    (if (and
-          (has-required-keys? json)
-          (not
-            (or
-              (null? (cdr (assoc 'comment json)))
-              (eq? #f (cdr (assoc 'comment json)))
-            )
-          )
-        )
-      (let ((project-hash      (cdr (assoc 'project_name_hash json)))
-            (file-path-hash    (cdr (assoc 'file_path_hash json)))
-            (line-no           (cdr (assoc 'line_number json)))
-            (treeish           (cdr (assoc 'treeish json))))
-
-        (let* (
-              (project-dir (list->path (list base-directory project-hash)))
-              (treeish-dir (list->path (list base-directory project-hash treeish)))
-              (file-name (sprintf "~A-~A.json" file-path-hash line-no))
-              (inter-repo-file-name (list->path (list treeish file-name)))
-              (file-path (list->path
-                           (list treeish-dir
-                                 file-name)))
-              )
-          (guarantee-dir treeish-dir)
-          (guarantee-git-project project-dir)
-          (write-string (json->string json) ; guarantees consistent formatting
-                                            ; passes _everything_ to the filesystem
-                                            ; including unexpected key value pairs
-                        #f (open-output-file file-path))
-          (add-note-to-git project-dir inter-repo-file-name)
-          (send-response
-            headers: pc-headers
-            status: 'ok
-            body: (sprintf "{\"status\": \"SUCCESS\", \"description\": \"~A written\"}" file-name ))
-              )
-        )
-
-      (begin
-
-
-
-      (send-response
-        headers: pc-headers
-        status: 'unprocessable-entity
-        body: "{\"status\": \"ERROR\", \"description\": \"missing required keys\"}")))))
-
+  (handle-comment request 'add ))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Delete a comment
 ; /comments
@@ -268,20 +206,26 @@
 ;   treeish: "<treeish>"
 ; }
 (define (handle-comments-delete request)
-  ; TODO: Refactor: LOTS of shared code between
-  ;       this & handle-comments-post
-  ; BEGIN SHARED CODE
+  (handle-comment request 'delete ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Delete & Create & Update
+;
+(define (handle-comment request add_or_delete)
   (let ((json (request->data request)))
     ; ( (project_name_hash . 1aabeb680a9ed12e4fb53d529513a2aa58341f5cfd0f7790c96388cbddbd5493)
     ;   (file_path_hash . 00c5f3f22a7c1dc3b2e377b650276b6027642ba5b21dc3bb132997f39065870a)
     ;   (treeish . #f)
-    ;   (line_number . 4))
+    ;   (line_number . 4)
+    ;   (user_name . masukomi)               ; not with delete
+    ;   (user_email . masukomi@masukomi.org) ; not with delete
+    ;   (comment . my first comment)         ; not with delete
+    ; )
     (if (has-required-keys? json)
       (let ((project-hash      (cdr (assoc 'project_name_hash json)))
             (file-path-hash    (cdr (assoc 'file_path_hash json)))
             (line-no           (cdr (assoc 'line_number json)))
             (treeish           (cdr (assoc 'treeish json))))
-
         (let* (
               (project-dir (list->path (list base-directory project-hash)))
               (treeish-dir (list->path (list base-directory project-hash treeish)))
@@ -293,13 +237,23 @@
               )
           (guarantee-dir treeish-dir)
           (guarantee-git-project project-dir)
-          ; END SHARED CODE
-          (remove-note-from-git project-dir inter-repo-file-name)
+          ; TODO switch on add_or_delete
+          (if (equal? add_or_delete 'add)
+            (begin ; add
+              (write-string (json->string json) ; guarantees consistent formatting
+                                                ; passes _everything_ to the filesystem
+                                                ; including unexpected key value pairs
+                            #f (open-output-file file-path))
+              (add-note-to-git project-dir inter-repo-file-name))
+            ; else delete...
+            (remove-note-from-git project-dir inter-repo-file-name)
+          )
           (send-response
             headers: pc-headers
             status: 'ok
-            body: "{\"status\": \"SUCCESS\", \"description\": \"comment removed\"}"  )
-
+            body: (if (equal? add_or_delete 'add)
+                    (sprintf "{\"status\": \"SUCCESS\", \"description\": \"~A written\"}" file-name )
+                    "{\"status\": \"SUCCESS\", \"description\": \"comment removed\"}"  ))
           ) ; end let*
       ) ; end if true's let let
       ; else...
@@ -310,7 +264,10 @@
           body: "{\"status\": \"ERROR\", \"description\": \"missing required keys\"}")) ; end if false's begin
     ) ; end if
 
-))
+  ))
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Request a comment
 ; /comments?project_name_hash=<hash_here>&file_path_hash=<hash_here>&treeishes=a,b,c
