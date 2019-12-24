@@ -75,6 +75,13 @@
   (run* ,(sprintf "cd ~A; git add ~A && git commit -m \"added note\"" project-dir-path note-file)))
 
 
+(define (remove-note-from-git project-dir note-file)
+  ; NOTE: Intentionally ignoring any complaints about file not existing
+  ; & NOT checking if file exists because it may have been
+  ; deleted from working dir manually but not removed from git.
+  (run* ,(sprintf "cd ~A; git rm ~A && git commit -m \"deleting comment\"" project-dir-path note-file)))
+
+
 (define (filename->path-hash filename)
   ; SHA 256 hashes are 65 chars long
   ; filenames are <sha 256 hash>-<line number>.json
@@ -182,7 +189,8 @@
 ;   project_name_hash: "<project name hash>",
 ;   file_path_hash: "<file path hash>",
 ;   line_number: "<line number>",
-;   treeish: "<treeish>"
+;   treeish: "<treeish>",
+;   comment: "comment text here"
 ; }
 (define (handle-comments-post request)
   ; TODO
@@ -248,6 +256,61 @@
         status: 'unprocessable-entity
         body: "{\"status\": \"ERROR\", \"description\": \"missing required keys\"}")))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Delete a comment
+; /comments
+;
+; Expected JSON input (key order doesn't matter)
+; {
+;   project_name_hash: "<project name hash>",
+;   file_path_hash: "<file path hash>",
+;   line_number: "<line number>",
+;   treeish: "<treeish>"
+; }
+(define (handle-comments-delete request)
+  ; TODO: Refactor: LOTS of shared code between
+  ;       this & handle-comments-post
+  ; BEGIN SHARED CODE
+  (let ((json (request->data request)))
+    ; ( (project_name_hash . 1aabeb680a9ed12e4fb53d529513a2aa58341f5cfd0f7790c96388cbddbd5493)
+    ;   (file_path_hash . 00c5f3f22a7c1dc3b2e377b650276b6027642ba5b21dc3bb132997f39065870a)
+    ;   (treeish . #f)
+    ;   (line_number . 4))
+    (if (has-required-keys? json)
+      (let ((project-hash      (cdr (assoc 'project_name_hash json)))
+            (file-path-hash    (cdr (assoc 'file_path_hash json)))
+            (line-no           (cdr (assoc 'line_number json)))
+            (treeish           (cdr (assoc 'treeish json))))
+
+        (let* (
+              (project-dir (list->path (list base-directory project-hash)))
+              (treeish-dir (list->path (list base-directory project-hash treeish)))
+              (file-name (sprintf "~A-~A.json" file-path-hash line-no))
+              (inter-repo-file-name (list->path (list treeish file-name)))
+              (file-path (list->path
+                           (list treeish-dir
+                                 file-name)))
+              )
+          (guarantee-dir treeish-dir)
+          (guarantee-git-project project-dir)
+          ; END SHARED CODE
+          (remove-note-from-git project-dir inter-repo-file-name)
+          (send-response
+            headers: pc-headers
+            status: 'ok
+            body: "{\"status\": \"SUCCESS\", \"description\": \"comment removed\"}"  )
+
+          ) ; end let*
+      ) ; end if true's let let
+      ; else...
+      (begin
+        (send-response
+          headers: pc-headers
+          status: 'unprocessable-entity
+          body: "{\"status\": \"ERROR\", \"description\": \"missing required keys\"}")) ; end if false's begin
+    ) ; end if
+
+))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Request a comment
 ; /comments?project_name_hash=<hash_here>&file_path_hash=<hash_here>&treeishes=a,b,c
@@ -327,8 +390,10 @@
       ((equal? path '(/ "v1" "comments"))
         (if (equal? method 'GET)
             (handle-comments-get request)
-            (handle-comments-post request) ; PUT and POST and PATCH handled by same function
-            ))
+            (if (equal? method 'DELETE)
+              (handle-comments-delete request)
+              (handle-comments-post request) ; PUT and POST and PATCH handled by same function
+            )))
       ((equal? path '(/ "shutdown"))
         (shutdown))
       ((equal? path '(/ "status"))
