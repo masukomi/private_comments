@@ -24,7 +24,7 @@
 (import chicken.condition)
 (import srfi-13)
 (import srfi-18); multithreading support
-(import srfi-1) ; (a)list library
+(import srfi-1) ; (a)list library + first, and last
 (import filepath)
 (import intarweb)
 (import medea)
@@ -53,8 +53,8 @@
       (list->path (list home ".config" "private_comments"))
       (get-environment-variable "PRIVATE_COMMENTS_DIR"))))
 (print "Private Comments server VERSION_NUMBER_HERE")
+(print (sprintf "Base Directory: ~A~%" base-directory) )
 (print "  Details: https://github.com/masukomi/private_comments/")
-; (print (sprintf "Base Directory: ~A~%" base-directory) )
 
 
 (define (guarantee-dir dir-path)
@@ -75,7 +75,7 @@
   (run* ,(sprintf "cd ~A; git add ~A && git commit -m \"added note\"" project-dir-path note-file)))
 
 
-(define (remove-note-from-git project-dir note-file)
+(define (remove-note-from-git project-dir-path note-file)
   ; NOTE: Intentionally ignoring any complaints about file not existing
   ; & NOT checking if file exists because it may have been
   ; deleted from working dir manually but not removed from git.
@@ -188,12 +188,17 @@
 ; {
 ;   project_name_hash: "<project name hash>",
 ;   file_path_hash: "<file path hash>",
-;   line_number: "<line number>",
+;   line_number: <line number>,
 ;   treeish: "<treeish>",
 ;   comment: "comment text here"
 ; }
 (define (handle-comments-post request)
-  (handle-comment request 'add ))
+    ; ( (project_name_hash . 1aabeb680a9ed12e4fb53d529513a2aa58341f5cfd0f7790c96388cbddbd5493)
+    ;   (file_path_hash . 00c5f3f22a7c1dc3b2e377b650276b6027642ba5b21dc3bb132997f39065870a)
+    ;   (treeish . #f)
+    ;   (line_number . 4)
+    ; )
+      (handle-comment 'add (request->data request)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Delete a comment
 ; /comments
@@ -202,30 +207,22 @@
 ; {
 ;   project_name_hash: "<project name hash>",
 ;   file_path_hash: "<file path hash>",
-;   line_number: "<line number>",
+;   line_number: <line number>,
 ;   treeish: "<treeish>"
 ; }
 (define (handle-comments-delete request)
-  (handle-comment request 'delete ))
+  (handle-comment 'delete (uri-query (request-uri request)) ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Delete & Create & Update
 ;
-(define (handle-comment request add_or_delete)
-  (let ((json (request->data request)))
-    ; ( (project_name_hash . 1aabeb680a9ed12e4fb53d529513a2aa58341f5cfd0f7790c96388cbddbd5493)
-    ;   (file_path_hash . 00c5f3f22a7c1dc3b2e377b650276b6027642ba5b21dc3bb132997f39065870a)
-    ;   (treeish . #f)
-    ;   (line_number . 4)
-    ;   (user_name . masukomi)               ; not with delete
-    ;   (user_email . masukomi@masukomi.org) ; not with delete
-    ;   (comment . my first comment)         ; not with delete
-    ; )
-    (if (has-required-keys? json)
-      (let ((project-hash      (cdr (assoc 'project_name_hash json)))
-            (file-path-hash    (cdr (assoc 'file_path_hash json)))
-            (line-no           (cdr (assoc 'line_number json)))
-            (treeish           (cdr (assoc 'treeish json))))
+(define (handle-comment add-or-delete params)
+  ;TODO Update headers to specify
+    (if (has-required-keys? params)
+      (let ((project-hash      (cdr (assoc 'project_name_hash params)))
+            (file-path-hash    (cdr (assoc 'file_path_hash params)))
+            (line-no           (cdr (assoc 'line_number params)))
+            (treeish           (cdr (assoc 'treeish params))))
         (let* (
               (project-dir (list->path (list base-directory project-hash)))
               (treeish-dir (list->path (list base-directory project-hash treeish)))
@@ -237,21 +234,21 @@
               )
           (guarantee-dir treeish-dir)
           (guarantee-git-project project-dir)
-          ; TODO switch on add_or_delete
-          (if (equal? add_or_delete 'add)
-            (begin ; add
-              (write-string (json->string json) ; guarantees consistent formatting
+          ; TODO switch on add-or-delete
+          (if (equal? add-or-delete 'add)
+            (begin ; ADD
+              (write-string (json->string params) ; guarantees consistent formatting
                                                 ; passes _everything_ to the filesystem
                                                 ; including unexpected key value pairs
                             #f (open-output-file file-path))
               (add-note-to-git project-dir inter-repo-file-name))
-            ; else delete...
+            ; else DELETE...
             (remove-note-from-git project-dir inter-repo-file-name)
           )
           (send-response
             headers: pc-headers
             status: 'ok
-            body: (if (equal? add_or_delete 'add)
+            body: (if (equal? add-or-delete 'add)
                     (sprintf "{\"status\": \"SUCCESS\", \"description\": \"~A written\"}" file-name )
                     "{\"status\": \"SUCCESS\", \"description\": \"comment removed\"}"  ))
           ) ; end let*
@@ -264,7 +261,7 @@
           body: "{\"status\": \"ERROR\", \"description\": \"missing required keys\"}")) ; end if false's begin
     ) ; end if
 
-  ))
+  )
 
 
 

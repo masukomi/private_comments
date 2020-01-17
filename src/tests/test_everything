@@ -1,0 +1,129 @@
+# Testing from the outside in.
+# This is going to be a pretty procedural
+# and order dependent set of tests.
+# I'm using bash_unit https://github.com/pgrange/bash_unit
+# to execute them.
+
+# test that we can launch the server
+
+setup_suite () {
+	# echo "BEGIN SETUP"
+	# prep the disposable test directory
+	TEST_COMMENTS_DIR="./pc_test_comments_dir"
+	if [ -e $TEST_COMMENTS_DIR ]; then
+		# echo "deleting $TEST_COMMENTS_DIR from last run"
+		rm -rf $TEST_COMMENTS_DIR
+	fi
+	mkdir -p $TEST_COMMENTS_DIR
+
+	# if the server is running, kill it
+	PID=$(pgrep private_comments)
+	if [ "$PID" != "" ]; then
+		# echo "Shutting down current private_comments server"
+		pkill private_comments
+	fi
+
+	# echo "starting server"
+	# start it and have it use the disposable directory
+	PRIVATE_COMMENTS_DIR=$TEST_COMMENTS_DIR ../private_comments &
+	# PRIVATE_COMMENTS_DIR=$TEST_COMMENTS_DIR ../private_comments 2> /dev/null &
+	disown
+
+	# echo "pid: "$(pgrep private_comments)
+	echo "status: "$(curl -s http://localhost:5749/status)
+	sleep 0.3
+	# sleep because without it the first test starts outputing and THEN
+	# we see the output from PC booting
+	# makes the output ugly
+
+
+	PROJECT_NAME_HASH="pc_testing_test_project_hash"
+	FILE_PATH_HASH="41c4765834d1627278775e6b5faa920d98d82dddcae6e4bf66b32de9725b1e00"
+	TREEISH_ONE="d689d9f4012e2d222cb69bfcb9d0bab2c66f5c7d"
+
+	echo "END SETUP"
+}
+
+teardown_suite () {
+	# echo "BEGIN TEARDOWN"
+	# echo "Shutting down server"
+	pkill private_comments
+	# echo "END TEARDOWN"
+}
+
+# NOTE RE NAMING:
+# They're run alphabetically
+
+# test that the status page works
+test_1_status_page () {
+
+	 # curl -s http://localhost:5749/status
+	 # I'm not sure why but the command has to be run at least
+	 # once before we can capture it in a var.
+	 # thus the status line in the setup_suite is non-optional
+	STATUS_JSON=$( curl -s http://localhost:5749/status )
+	assert_equals '{"status": "ALIVE"}' "$STATUS_JSON"
+
+}
+#
+# # test that it doesn't blow up when there aren't any comments
+test_2_no_comments () {
+	URL="http://localhost:5749/v1/comments?project_name_hash=$PROJECT_NAME_HASH&file_path_hash=$FILE_PATH_HASH&treeishes=$TREEISH_ONE"
+	COMMENT_JSON=$(curl -s --request GET \
+	  --url $URL)
+	assert_equals "{\"project_name_hash\":\"$PROJECT_NAME_HASH\",\"file_path_hash\":\"$FILE_PATH_HASH\",\"comments\":[]}" "$COMMENT_JSON"
+}
+
+# test that it lets you create a comment
+test_3_new_comment () {
+	read -r -d '' NEW_COMMENT_JSON << EOM
+{
+  "project_name_hash":  "$PROJECT_NAME_HASH",
+  "file_path_hash":     "$FILE_PATH_HASH",
+  "treeish":            "$TREEISH_ONE",
+  "line_number":        4,
+  "comment":            "comment text here"
+}
+EOM
+
+	NEW_COMMENT_RESPONSE=$(curl -s --request POST \
+		--url http://localhost:5749/v1/comments \
+		--header 'content-type: application/json' \
+		--data "$NEW_COMMENT_JSON")
+
+	assert_equals '{"status": "SUCCESS", "description": "41c4765834d1627278775e6b5faa920d98d82dddcae6e4bf66b32de9725b1e00-4.json written"}' "$NEW_COMMENT_RESPONSE"
+
+
+	test -e "$TEST_COMMENTS_DIR/pc_testing_test_project_hash/d689d9f4012e2d222cb69bfcb9d0bab2c66f5c7d/41c4765834d1627278775e6b5faa920d98d82dddcae6e4bf66b32de9725b1e00-4.json"
+
+	assert_equals 0 $? "json file was not created"
+}
+
+# test that it lets you retrieve that comment
+test_4_comment () {
+	URL="http://localhost:5749/v1/comments?project_name_hash=$PROJECT_NAME_HASH&file_path_hash=$FILE_PATH_HASH&treeishes=$TREEISH_ONE"
+	COMMENT_JSON=$(curl -s --request GET \
+	  --url $URL)
+	assert_equals "{\"project_name_hash\":\"$PROJECT_NAME_HASH\",\"file_path_hash\":\"$FILE_PATH_HASH\",\"comments\":[{\"treeish\":\"$TREEISH_ONE\",\"line_number\":4,\"comment\":\"comment text here\"}]}" "$COMMENT_JSON"
+}
+
+# test that it lets you delete that comment
+test_5_delete_comment () {
+
+	URL="http://localhost:5749/v1/comments?project_name_hash=$PROJECT_NAME_HASH&file_path_hash=$FILE_PATH_HASH&treeish=$TREEISH_ONE&line_number=4"
+
+    # ^^ singular treeish not treeishes
+    # URL not JSON because DELETE doesn't support doing anything
+    # with the message body. All relevant info must be in URL
+
+
+	KILL_COMMENT_RESPONSE=$(curl -s -X DELETE $URL )
+
+	assert_equals '{"status": "SUCCESS", "description": "comment removed"}' "$KILL_COMMENT_RESPONSE"
+
+	test -e "$TEST_COMMENTS_DIR/pc_testing_test_project_hash/d689d9f4012e2d222cb69bfcb9d0bab2c66f5c7d/41c4765834d1627278775e6b5faa920d98d82dddcae6e4bf66b32de9725b1e00-4.json"
+
+	assert_equals 1 $? "json file was not deleted"
+
+
+}
