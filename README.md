@@ -118,8 +118,21 @@ $ csi private_comments.scm
 When your ready to do a final compile just use the `build.sh` script  a `private_comments` and `pc` executable.
 
 
+The tests are written in Bash and use the [bash_unit](https://github.com/pgrange/bash_unit#readme) framework. Once you've installed it, added it to your PATH, and compiled your changes with `build.sh` you can run the tests like this:
+
+```
+# run from within the src directory
+
+$ bash_unit tests/test_everything
+```
+
+If it's running `private_comments` will be shut down, and a new instance will be run. The new instance will store its test data separately so you don't have to worry about messing up, or loosing, any existing comments you may have created with private comments.
+
 ## Contributing
 
 Pull requests are happily welcomed. Fork the repo. Make it better. Submit your changes. Note that all changes must be backwards compatible. We can't break existing plugins. If you're interested in a making a change that would break backwards compatibility please open a ticket to discuss it first. We'll create a `v2` version of the API if it's worth it.
 
 If you're new to Scheme, or Chicken Scheme, don't worry. Just do your best and submit what you come up with. It's all good.
+
+Please add a test to `src/tests/test_everything` that confirms your changes are good, and that existing features haven't been broken.
+
