@@ -9,3 +9,4 @@ src/*.o
 src/*.link
 .DS_Store
 src/*.tgz
+src/tests/pc_test_comments_dir/*
