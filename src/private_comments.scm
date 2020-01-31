@@ -59,11 +59,18 @@
 
 (define (guarantee-dir dir-path)
   (if (not (file-exists? dir-path))
-    (create-directory dir-path #t))
+    (begin
+      (format (current-error-port) "XXX didn't exist. creating: ~A~%" dir-path)
+      ; (create-directory dir-path 'with-parents) ; <-- doesn't work!!
+      (run ,(sprintf "mkdir -p ~A" dir-path))
+      )
+
+    )
 
   )
 (define (guarantee-git-project project-dir-path)
   (let ((git-dir-path (list->path (list project-dir-path ".git"))))
+    (guarantee-dir project-dir-path)
     (if (not (file-exists? git-dir-path))
           (begin
             (print (sprintf "initializing repo in ~A" project-dir-path) )
@@ -72,6 +79,7 @@
 (define (add-note-to-git project-dir-path note-file)
   ; NOTE: if you push the same note twice git will have a non-zero exit code here.
   ; Intentionally ignoring it.
+  (format (current-error-port) "XXX adding ~A to dir ~A~%" note-file project-dir-path)
   (run* ,(sprintf "cd ~A; git add ~A && git commit -m \"added note\"" project-dir-path note-file)))
 
 
@@ -237,10 +245,11 @@
           ; TODO switch on add-or-delete
           (if (equal? add-or-delete 'add)
             (begin ; ADD
-              (write-string (json->string params) ; guarantees consistent formatting
-                                                ; passes _everything_ to the filesystem
-                                                ; including unexpected key value pairs
-                            #f (open-output-file file-path))
+              (format (current-error-port) "XXX WRITING to ~A~%" file-path)
+              (string->file (json->string params) file-path)
+              ; guarantees consistent formatting
+              ; passes _everything_ to the filesystem
+              ; including unexpected key value pairs
               (add-note-to-git project-dir inter-repo-file-name))
             ; else DELETE...
             (remove-note-from-git project-dir inter-repo-file-name)
