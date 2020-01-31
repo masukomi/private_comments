@@ -1,0 +1,43 @@
+# Testing from the outside in.
+# This is going to be a pretty procedural
+# and order dependent set of tests.
+# I'm using bash_unit https://github.com/pgrange/bash_unit
+# to execute them.
+
+# test that we can launch the server
+
+# NOTE RE NAMING:
+# They're run alphabetically
+#
+source ./test_suite_management.sh
+
+#
+# # test that it doesn't blow up when there aren't any comments
+test_2_no_comments () {
+	nothing=$($REPO_ROOT/src/pc -f "src/tests/commentless_file.txt")
+	assert_equals 0 $? "error code returned when retrieving comments"
+	assert_equals "$nothing" "" "there were unexpected comments in commentless file"
+}
+
+# # test that it lets you create a comment
+test_3_new_comment () {
+	response=$($REPO_ROOT/src/pc -f src/comment-recording.scm -c "my comment" -l 1 2>/dev/null)
+	assert_equals "" "$response" "pc returned unexpected response when creating comment"
+
+	assert "test -e \"$TEST_COMMENTS_DIR/e928d49542ea19c66589897e0ee7160c09947b0b92d73b029b28d591aeaf5cb4/93569b7b/a5ecf5465d3e93f71e6af298255cd672046ce7424d6019c6586181c1cf82d989-1.json\"" "json file not created"
+}
+
+# test that it lets you retrieve that comment
+test_4_comment () {
+	response=$($REPO_ROOT/src/pc -f src/comment-recording.scm) # Can't specify line
+	assert_equals "1: my comment" "$response" "unable to retrieve comment"
+}
+
+# test that it lets you delete that comment
+test_5_delete_comment () {
+	response=$($REPO_ROOT/src/pc -d -f src/comment-recording.scm -l 1)
+	assert_equals "" "$response" "error deleting comment"
+	assert "test ! -e \"$TEST_COMMENTS_DIR/e928d49542ea19c66589897e0ee7160c09947b0b92d73b029b28d591aeaf5cb4/93569b7b/a5ecf5465d3e93f71e6af298255cd672046ce7424d6019c6586181c1cf82d989-1.json\"" "json file not deleted"
+
+
+}

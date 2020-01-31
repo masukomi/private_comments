@@ -1,6 +1,7 @@
 (module comment-recording
   (
-   record-comment
+   post-or-delete-comment
+   prep-comment-info-alist
   )
 
   (import scheme)
@@ -34,61 +35,60 @@
   ;   user_email: "<user email>", // optional
   ; }
 
-  (define (record-comment line-number line-treeish-map comment server-info user-info)
+  (define (prep-comment-info-alist
+            line-number
+            line-treeish-map
+            comment
+            user-info
+            server-info)
+
     (if (null? user-info)
       (set! user-info (get-user-info)))
+
+    (let ((treeish
+            (alist-ref line-number line-treeish-map)))
+      (if treeish
+        (begin
+          (list
+            (cons 'project_name_hash (alist-ref 'project-name-hash server-info))
+            (cons 'file_path_hash (alist-ref 'file-path-hash server-info))
+            (cons 'treeish treeish)
+            (cons 'line_number line-number)
+            (cons 'user_name (alist-ref 'user-name user-info))
+            (cons 'user_email (alist-ref 'user-email user-info))
+            (cons 'comment comment)
+            ))
+        (begin
+          (format (current-error-port)
+                  "Line ~A has not been committed yet. I can't act on uncommitted lines.~%"
+                  line-number)
+          '()))))
+
+  (define (post-or-delete-comment data pc-url post-or-delete)
     ; TODO Implement better handling of comments on uncommitted lines
-    ; lookup the treeish for the line number
     ; SHORT TERM: bail if that line isn't committed
     ; LONG TERM: store it in a temp file
     ;            and wait for the commit before sending it.
-    (let ((user-info (get-user-info))
-          (treeish (alist-ref line-number line-treeish-map))
-          )
-      (if treeish
-        (begin
-          ; (format (current-error-port)
-          ;         "XXX comment for ~A <~A> on line ~A with treeish ~A~%comment: ~A~%"
-          ;         (alist-ref 'user-name user-info)
-          ;         (alist-ref 'user-email user-info)
-          ;         line-number
-          ;         treeish
-          ;         comment)
-          (let ((data
-                  (list
-                    (cons 'project_name_hash (alist-ref 'project-name-hash server-info))
-                    (cons 'file_path_hash (alist-ref 'file-path-hash server-info))
-                    (cons 'treeish treeish)
-                    (cons 'line_number line-number)
-                    (cons 'user_name (alist-ref 'user-name user-info))
-                    (cons 'user_email (alist-ref 'user-email user-info))
-                    (cons 'comment comment)
-                    ))
-                (pc-url
-                  (string-join
-                    (list
-                      (alist-ref 'pc-url server-info)
-                      "v1"
-                      "comments")
-                     "/"))
-                )
 
-              ; example of what we're doing here:
-              ; (post-or-die "http://0.0.0.0:8080" "{fake: \"data\"}" "error message ~A~%")
-              (post-or-die pc-url (json->string data)
-                (sprintf
-                  "Unable to connect to Private Comments server at: ~A~% ~~A~%Is it running?~%"
-                  pc-url))
-            )
-
-        )
-        (format (current-error-port)
-                "Line ~A has not been committed yet. Please commit it before commenting.~%"
-                line-number))
-
-    )
-  )
+    ; bail early for uncommitted line...
+    (if (null? (alist-ref 'treeish data))
+      (format (current-error-port)
+                  "Line ~A has not been committed yet. Please commit it before commenting.~%"
+                  (alist-ref 'line_number data)))
 
 
+    (if (equal? post-or-delete 'POST)
+      (post-or-die
+        pc-url
+        (json->string data)
+        (sprintf
+          "Failed to create on Private Comments server at: ~A~% ~~A~%Is it running?~%"
+          pc-url))
+      (delete-or-die
+        pc-url
+        (sprintf
+          "Failed to delete from Private Comments server at: ~A~% ~~A~%Is it running?~%"
+          pc-url)
+        )))
 )
 

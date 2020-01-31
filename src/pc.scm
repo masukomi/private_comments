@@ -33,6 +33,7 @@
 (define pc-server-port 5749)
 (define comment #f)
 (define line-number -1)
+(define kill-it #f)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -46,18 +47,19 @@
       (c comment) (required: "<Comment>")
         "A comment to be stored")
     (args:make-option
+      (d delete) #:none
+        "Will delete comment at specified location (line & file)")
+    (args:make-option
       (l line) (required: "<Line Number>")
         "The line number of the comment to be stored"
-        (set! arg (string->number (or arg "-1")))
-        )
-    (args:make-option
-      (s server) (required: "<Server URL>")
-        "Private Comments Server Url [default: http://0.0.0.0]")
+        (set! arg (string->number (or arg "-1"))))
     (args:make-option
       (p port) (required: "<Server Port>")
         "Private Comments Server Port [default: 5749]"
-        (set! arg (string->number (or arg "5749")))
-                      )
+        (set! arg (string->number (or arg "5749"))))
+    (args:make-option
+      (s server) (required: "<Server URL>")
+        "Private Comments Server Url [default: http://0.0.0.0]")
     (args:make-option
       (h help) #:none
         "Display this text"
@@ -70,7 +72,7 @@
  (with-output-to-port (current-error-port)
    (lambda ()
   (print "Private Comments client VERSION_NUMBER_HERE")
-  (format #t "Usage: ~A -f file-path [-fclsp] [option values]~%" (car (argv)) )
+  (format #t "Usage: ~A -f file-path [-fcdlsp] [option values]~%" (car (argv)) )
   (print (parameterize ((args:separator " ")
                           (args:indent 5)
                           (args:width 35))
@@ -89,19 +91,21 @@
            (line (alist-ref 'line options))
            (server (alist-ref 'server options))
            (port (alist-ref 'port options))
+           (kill (alist-ref 'delete options))
            )
         (if file
           (set! comments-file-path file))
         (if line (set! line-number line))
         (if server (set! pc-server-url server))
         (if port (set! pc-server-port port))
-        (if comment-arg (set! comment comment-arg))))
-
+        (if comment-arg (set! comment comment-arg))
+        (if kill (set! kill-it kill))))
 
 (if (or
       (not comments-file-path)
       (equal? "UNKNOWN" comments-file-path))
   (usage))
+
 
 ;; END PROCESSING COMMAND LINE ARGS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -127,17 +131,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; BEGIN REQUIREMENTS CHECKS
 
-(define git-repo-root "UNKNOWN")
-(define project-name
-  (let ((git-output (capture "git rev-parse --show-toplevel"))  )
+(define git-repo-root
+   (let (
+        (git-output (capture "git rev-parse --show-toplevel"))
+        )
     (if (not (string? git-output))
       (begin
         (format (current-error-port) "Must be run from within a git repository")
         (exit 2))
-        (set! git-repo-root (string-trim-both git-output))
-      )
-    (last (path->list git-output))))
+      (string-trim-both git-output))))
 
+
+(define project-name
+    (last (path->list git-repo-root)))
 
 ; takes a file path,
 ; strips out the undesireable folder navigation bits
@@ -159,19 +165,19 @@
 (define repo-file-path
   (list->path
     (append
-      (list directory-separator-string)
+      '("") ; we need a / at the start of the path but saying '("/") would get us 2 slashes
       (path->list git-repo-root)
-      file-path-list)))
-
-
+      file-path-list)
+    ))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; confirm that there's a git repo where we expect it.
 (if (not (file-exists? repo-file-path))
   (begin
     (format (current-error-port)
-            "Unable to find ~A~%" repo-file-path)
+            "pc was unable to find ~A~%" repo-file-path)
     (exit 3)
-    ))
+    )
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; A string of the shell commands we'll execute to get info on a file
@@ -203,10 +209,10 @@
 ; We don't really care about specific errors
 
 (read-json
-  (request-or-die
+  (get-or-die
     (string-join (list pc-url "status") "/")
     (sprintf
-      "Unable to connect to Private Comments server at: ~A~% Error: ~~A~%Is it running?~%"
+      "Unable to connect to Private Comments server at: ~A~% Error: ~~Y~%Is it running?~%"
       pc-url) ))
 
 ; END REQUIREMENTS CHECKS
@@ -334,27 +340,80 @@
 
         (display-comments
           (read-json
-            (request-or-die
+            (get-or-die
               comment-request-url
               "Error retrieving comments:~%~A~%"))
           line-treeish-map)
   )
 )
 
+; SOME VALIDATION
+; TODO: add more & break it out into a validator module.
+;
+; if we're not killing it
+; and there is no comment
+; but there is a line number
+(if (and (not kill-it) (eq? #f comment) (> line-number -1))
+  (begin
+    (format (current-error-port) "You must specify a comment to record on line ~A~%" line-number)
+    (exit 13)))
 
+; if there's a comment but no line number
+(if (and (not (eq? #f comment)) (eq? line-number -1))
+  (begin
+    (format (current-error-port) "You must specify a line number to comment on~%")
+    (exit 14)))
 
+(define (generate-post-url server-info)
+  (string-join
+    (list
+      (alist-ref 'pc-url server-info)
+      "v1"
+      "comments")
+     "/")
+  )
+(define (generate-delete-url server-info data line-treeish-map)
+  (conc
+    (string-join
+      (list
+        (alist-ref 'pc-url server-info)
+        "v1"
+        "comments")
+       "/")
+    ; ?project_name_hash=$PROJECT_NAME_HASH&file_path_hash=$FILE_PATH_HASH&treeish=$TREEISH_ONE&line_number=4
+    "?"
+    (string-join
+      (list
+        (sprintf "project_name_hash=~A" (alist-ref 'project_name_hash data))
+        (sprintf "file_path_hash=~A" (alist-ref 'file_path_hash data))
+        (sprintf "treeish=~A" (alist-ref (alist-ref 'line_number data)  line-treeish-map))
+        (sprintf "line_number=~A" (alist-ref 'line_number data)))
+      "&")
+  )
+)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ARE WE REQUESTING COMMENTS OR CREATING THEM
-
-(if (not (eq? #f comment)) ; it's either #f or a string
-  (if (> line-number -1)
-    (record-comment line-number line-treeish-map comment server-info '())
-    (begin
-      (format (current-error-port)
-              "You must specify the line number you're commenting on: ~A ~A~%" line-number comment)
-      (exit 5)))
-  (request-comments server-info treeishes))
-
+(if (> line-number -1) ; recording or deleting a comment
+  (let* ((comment-info-alist (prep-comment-info-alist
+            line-number
+            line-treeish-map
+            comment
+            '() ; user-info TODO: allow this to be input / configured
+            server-info))
+        (url
+          (if (not kill-it)
+            (generate-post-url server-info)
+            (generate-delete-url server-info comment-info-alist line-treeish-map)
+            )
+          )
+        )
+      (post-or-delete-comment
+        comment-info-alist
+        url
+        (if kill-it 'DETELE 'POST)))
+  ; no line specified, probably want everything
+  (request-comments server-info treeishes)
+  )
 
 
 (exit 0)

@@ -28,6 +28,7 @@ setup_suite () {
 	# we see the output from PC booting
 	# makes the output ugly
 
+    REPO_ROOT=$(git rev-parse --show-toplevel)
 
 	PROJECT_NAME_HASH="pc_testing_test_project_hash"
 	FILE_PATH_HASH="41c4765834d1627278775e6b5faa920d98d82dddcae6e4bf66b32de9725b1e00"

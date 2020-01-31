@@ -4,7 +4,8 @@
   'comment-recording
   'comment-recording
   (scheme#list)
-  '((record-comment . comment-recording#record-comment))
+  '((post-or-delete-comment . comment-recording#post-or-delete-comment)
+    (prep-comment-info-alist . comment-recording#prep-comment-info-alist))
   (scheme#list)
   (scheme#list))
 

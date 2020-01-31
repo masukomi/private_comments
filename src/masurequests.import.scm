@@ -4,8 +4,11 @@
   'masurequests
   'masurequests
   (scheme#list)
-  '((request-or-die . masurequests#request-or-die)
-    (post-or-die . masurequests#post-or-die))
+  '((delete-or-die . masurequests#delete-or-die)
+    (get-or-die . masurequests#get-or-die)
+    (post-or-die . masurequests#post-or-die)
+    (put-or-die . masurequests#put-or-die)
+    (request-or-die . masurequests#request-or-die))
   (scheme#list)
   (scheme#list))
 

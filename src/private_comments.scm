@@ -60,7 +60,7 @@
 (define (guarantee-dir dir-path)
   (if (not (file-exists? dir-path))
     (begin
-      (format (current-error-port) "XXX didn't exist. creating: ~A~%" dir-path)
+      ; (format (current-error-port) "XXX didn't exist. creating: ~A~%" dir-path)
       ; (create-directory dir-path 'with-parents) ; <-- doesn't work!!
       (run ,(sprintf "mkdir -p ~A" dir-path))
       )
@@ -79,7 +79,7 @@
 (define (add-note-to-git project-dir-path note-file)
   ; NOTE: if you push the same note twice git will have a non-zero exit code here.
   ; Intentionally ignoring it.
-  (format (current-error-port) "XXX adding ~A to dir ~A~%" note-file project-dir-path)
+  ; (format (current-error-port) "XXX adding ~A to dir ~A~%" note-file project-dir-path)
   (run* ,(sprintf "cd ~A; git add ~A && git commit -m \"added note\"" project-dir-path note-file)))
 
 
@@ -245,7 +245,7 @@
           ; TODO switch on add-or-delete
           (if (equal? add-or-delete 'add)
             (begin ; ADD
-              (format (current-error-port) "XXX WRITING to ~A~%" file-path)
+              ; (format (current-error-port) "XXX WRITING to ~A~%" file-path)
               (string->file (json->string params) file-path)
               ; guarantees consistent formatting
               ; passes _everything_ to the filesystem
@@ -267,7 +267,8 @@
         (send-response
           headers: pc-headers
           status: 'unprocessable-entity
-          body: "{\"status\": \"ERROR\", \"description\": \"missing required keys\"}")) ; end if false's begin
+          body: (sprintf
+                  "{\"status\": \"ERROR\", \"description\": \"Missing required keys. Only had these: ~A\"}" params ))) ; end if false's begin
     ) ; end if
 
   )

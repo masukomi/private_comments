@@ -123,7 +123,8 @@ The tests are written in Bash and use the [bash_unit](https://github.com/pgrange
 ```
 # run from within the src directory
 
-$ bash_unit tests/test_everything
+$ bash_unit tests/test_server
+$ bash_unit tests/test_client
 ```
 
 If it's running `private_comments` will be shut down, and a new instance will be run. The new instance will store its test data separately so you don't have to worry about messing up, or loosing, any existing comments you may have created with private comments.
