@@ -9,12 +9,12 @@
 setup_suite () {
 	# echo "BEGIN SETUP"
 	# prep the disposable test directory
-	TEST_COMMENTS_DIR="./pc_test_comments_dir"
+	TEST_COMMENTS_DIR="$HOME/pc_test_comments_dir"
 	if [ -e $TEST_COMMENTS_DIR ]; then
 		# echo "deleting $TEST_COMMENTS_DIR from last run"
 		rm -rf $TEST_COMMENTS_DIR
 	fi
-	mkdir -p $TEST_COMMENTS_DIR
+	# mkdir -p $TEST_COMMENTS_DIR
 
 	# if the server is running, kill it
 	PID=$(pgrep private_comments)
@@ -31,7 +31,7 @@ setup_suite () {
 
 	# echo "pid: "$(pgrep private_comments)
 	echo "status: "$(curl -s http://localhost:5749/status)
-	sleep 0.3
+	sleep 0.5
 	# sleep because without it the first test starts outputing and THEN
 	# we see the output from PC booting
 	# makes the output ugly
@@ -93,10 +93,7 @@ EOM
 
 	assert_equals '{"status": "SUCCESS", "description": "41c4765834d1627278775e6b5faa920d98d82dddcae6e4bf66b32de9725b1e00-4.json written"}' "$NEW_COMMENT_RESPONSE"
 
-
-	test -e "$TEST_COMMENTS_DIR/pc_testing_test_project_hash/d689d9f4012e2d222cb69bfcb9d0bab2c66f5c7d/41c4765834d1627278775e6b5faa920d98d82dddcae6e4bf66b32de9725b1e00-4.json"
-
-	assert_equals 0 $? "json file was not created"
+	assert "test -e \"$TEST_COMMENTS_DIR/pc_testing_test_project_hash/d689d9f4012e2d222cb69bfcb9d0bab2c66f5c7d/41c4765834d1627278775e6b5faa920d98d82dddcae6e4bf66b32de9725b1e00-4.json\"" "json file not created"
 }
 
 # test that it lets you retrieve that comment
@@ -121,9 +118,7 @@ test_5_delete_comment () {
 
 	assert_equals '{"status": "SUCCESS", "description": "comment removed"}' "$KILL_COMMENT_RESPONSE"
 
-	test -e "$TEST_COMMENTS_DIR/pc_testing_test_project_hash/d689d9f4012e2d222cb69bfcb9d0bab2c66f5c7d/41c4765834d1627278775e6b5faa920d98d82dddcae6e4bf66b32de9725b1e00-4.json"
-
-	assert_equals 1 $? "json file was not deleted"
+	assert "test ! -e \"$TEST_COMMENTS_DIR/pc_testing_test_project_hash/d689d9f4012e2d222cb69bfcb9d0bab2c66f5c7d/41c4765834d1627278775e6b5faa920d98d82dddcae6e4bf66b32de9725b1e00-4.json\"" "json file was not deleted"
 
 
 }
