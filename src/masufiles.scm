@@ -4,12 +4,20 @@
    path->list
    read-file-contents
    directory-separator-string
+   string->file
+   file->string
   )
   (import scheme)
   (import srfi-13)
   (import filepath)
   (import chicken.string)
   (import chicken.io)
+
+  ;debugging only
+  (import chicken.base)
+  (import chicken.format)
+  (import srfi-28)
+  (import pathname-expand)
 
   (define directory-separator-string
     (make-string 1 (filepath:path-separator)))
@@ -38,4 +46,15 @@
                     (string-append file-contents c))
                   (loop (read-line fh))))) )
       file-contents))
+
+  (define (file->string file-path)
+    (read-file-contents file-path))
+
+  (define (string->file a-string file-path)
+    (format (current-error-port) "XXX asked to write string to ~A~%" file-path)
+    (define output-file-port
+      (open-output-file
+        (pathname-expand file-path)))
+    (display a-string output-file-port)
+    (close-output-port output-file-port))
 )

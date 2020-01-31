@@ -33,6 +33,7 @@ csc -link masufiles -static private_comments.scm
 
 echo "Building pc executable..."
 
+csc -static -unit pathname-expand -cJ pathname-expand.scm
 csc -static -unit masufiles -cJ masufiles.scm
 csc -static -unit masurequests -cJ masurequests.scm
 csc -static -unit masutils -cJ masutils.scm
