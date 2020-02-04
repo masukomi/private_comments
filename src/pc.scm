@@ -27,14 +27,15 @@
 (import srfi-13)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; VARS WE'LL NEED FROM THE COMMAND LINE INPUT
-(define comments-file-path #f)
-(define pc-server-url "http://0.0.0.0")
-(define pc-server-port 5749)
-(define comment #f)
-(define line-number -1)
-(define kill-it #f)
-
+(define cli-options
+  `(
+    (comments-file-path . ,#f)
+    (pc-server-url . ,"http://0.0.0.0")
+    (pc-server-port . 5749)
+    (comment . ,#f)
+    (line-number . -1)
+    (kill-it . ,#f)
+    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; BEGIN HANDLING COMMAND LINE ARGUMENTS
@@ -93,18 +94,44 @@
            (port        (alist-ref 'port    options))
            (kill        (alist-ref 'delete  options))
            )
-      (if file        (set! comments-file-path file))
-      (if line        (set! line-number        line))
-      (if server      (set! pc-server-url      server))
-      (if port        (set! pc-server-port     port))
-      (if comment-arg (set! comment            comment-arg))
-      (if kill        (set! kill-it            kill))))
+      (if file
+        (set-cdr! (assoc 'comments-file-path cli-options) file))
+      (if line
+        (set-cdr! (assoc 'line-number         cli-options) line))
+      (if server
+        (set-cdr! (assoc 'pc-server-url       cli-options) server))
+      (if port
+        (set-cdr! (assoc 'pc-server-port      cli-options) port))
+      (if comment-arg
+        (set-cdr! (assoc 'comment             cli-options) comment-arg))
+      (if kill
+        (set-cdr! (assoc 'kill-it             cli-options) kill))))
 
-(if (or
-      (not comments-file-path)
-      (equal? "UNKNOWN" comments-file-path))
+;; VALIDATIONS
+; have they specified the file we're dealing with?
+(if (equal? "UNKNOWN" (alist-ref 'comments-file-path cli-options))
   (usage))
 
+; if we're not killing it
+; and there is no comment
+; but there is a line number
+(if (and
+      (not    (alist-ref 'kill-it     cli-options))
+      (eq? #f (alist-ref 'comment     cli-options))
+      (>      (alist-ref 'line-number cli-options) -1))
+  (begin
+    (format (current-error-port) "You must specify a comment to record on line ~A~%" (alist-ref 'line-number cli-options))
+    (exit 13)))
+
+; if there's a comment but no line number
+(if (and
+      (not (eq? #f (alist-ref 'comment     cli-options)))
+      (eq?         (alist-ref 'line-number cli-options) -1))
+  (begin
+    (format (current-error-port) "You must specify a line number to comment on~%")
+    (exit 14)))
+
+;; END VALIDATION
 
 ;; END PROCESSING COMMAND LINE ARGS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -116,16 +143,16 @@
 ; if it's specified in env use that
 ; otherwise 5749
 (define listening-port
-  (if (= pc-server-port -1)
+  (if (= (alist-ref 'pc-server-port cli-options) -1)
     (if (not
           (get-environment-variable "PRIVATE_COMMENTS_PORT"))
         5749
         (string->number
           (get-environment-variable "PRIVATE_COMMENTS_PORT")))
-    pc-server-port))
+    (alist-ref 'pc-server-port cli-options)))
 
 ; TODO make URL configurable via env var
-(define pc-url (sprintf "~A:~A" pc-server-url listening-port))
+(define pc-url (sprintf "~A:~A" (alist-ref 'pc-server-url cli-options) listening-port))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; BEGIN REQUIREMENTS CHECKS
@@ -157,7 +184,7 @@
 (define file-path-list
   (filter
      (lambda (elem) (not (or (equal? "." elem) (equal? ".." elem)) ))
-     (path->list comments-file-path)))
+     (path->list (alist-ref 'comments-file-path cli-options))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; get the path to the git repo containing our files
@@ -187,7 +214,7 @@
   (sprintf "git blame -c ~A~A~A | awk '{print $1}'"
            git-repo-root
            directory-separator-string
-           comments-file-path))
+           (alist-ref 'comments-file-path cli-options)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -311,10 +338,14 @@
 
 ; 4. generate JSON request for private_comments
 (define project-name-hash
-  (message-digest-string (sha256-primitive) project-name))
+  (message-digest-string
+    (sha256-primitive)
+    project-name))
 
 (define file-path-hash
-  (message-digest-string (sha256-primitive) comments-file-path))
+  (message-digest-string
+    (sha256-primitive)
+    (alist-ref 'comments-file-path cli-options)))
 
 (define server-info
   (list
@@ -346,22 +377,6 @@
   )
 )
 
-; SOME VALIDATION
-; TODO: add more & break it out into a validator module.
-;
-; if we're not killing it
-; and there is no comment
-; but there is a line number
-(if (and (not kill-it) (eq? #f comment) (> line-number -1))
-  (begin
-    (format (current-error-port) "You must specify a comment to record on line ~A~%" line-number)
-    (exit 13)))
-
-; if there's a comment but no line number
-(if (and (not (eq? #f comment)) (eq? line-number -1))
-  (begin
-    (format (current-error-port) "You must specify a line number to comment on~%")
-    (exit 14)))
 
 (define (generate-post-url server-info)
   (string-join
@@ -398,24 +413,27 @@
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ARE WE REQUESTING COMMENTS OR CREATING THEM
-(if (> line-number -1) ; recording or deleting a comment
+(if (> (alist-ref 'line-number cli-options) -1) ; recording or deleting a comment
   (let* ((comment-info-alist (prep-comment-info-alist
-            line-number
+            (alist-ref 'line-number cli-options)
             line-treeish-map
-            comment
+            (alist-ref 'comment cli-options)
             '() ; user-info TODO: allow this to be input / configured
             server-info))
         (url
-          (if (not kill-it)
+          (if (not (alist-ref 'kill-it cli-options))
             (generate-post-url server-info)
-            (generate-delete-url server-info comment-info-alist line-treeish-map)
+            (generate-delete-url
+              server-info
+              comment-info-alist
+              line-treeish-map)
             )
           )
         )
       (post-or-delete-comment
         comment-info-alist
         url
-        (if kill-it 'DETELE 'POST)))
+        (if (alist-ref 'kill-it cli-options) 'DETELE 'POST)))
   ; no line specified, probably want everything
   (request-comments server-info treeishes)
   )
