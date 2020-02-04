@@ -73,9 +73,9 @@
    (lambda ()
   (print "Private Comments client VERSION_NUMBER_HERE")
   (format #t "Usage: ~A -f file-path [-fcdlsp] [option values]~%" (car (argv)) )
-  (print (parameterize ((args:separator " ")
-                          (args:indent 5)
-                          (args:width 35))
+  (print (parameterize (  (args:separator " ")
+                          (args:indent    5)
+                          (args:width     35))
              (args:usage opts)))
   (format #t "Report bugs at https://github.com/masukomi/private_comments/issues")
   (exit 1))))
@@ -86,20 +86,19 @@
 (receive (options operands)
     (args:parse (command-line-arguments) opts)
     (let (
-           (file (alist-ref 'file options))
+           (file        (alist-ref 'file    options))
            (comment-arg (alist-ref 'comment options))
-           (line (alist-ref 'line options))
-           (server (alist-ref 'server options))
-           (port (alist-ref 'port options))
-           (kill (alist-ref 'delete options))
+           (line        (alist-ref 'line    options))
+           (server      (alist-ref 'server  options))
+           (port        (alist-ref 'port    options))
+           (kill        (alist-ref 'delete  options))
            )
-        (if file
-          (set! comments-file-path file))
-        (if line (set! line-number line))
-        (if server (set! pc-server-url server))
-        (if port (set! pc-server-port port))
-        (if comment-arg (set! comment comment-arg))
-        (if kill (set! kill-it kill))))
+      (if file        (set! comments-file-path file))
+      (if line        (set! line-number        line))
+      (if server      (set! pc-server-url      server))
+      (if port        (set! pc-server-port     port))
+      (if comment-arg (set! comment            comment-arg))
+      (if kill        (set! kill-it            kill))))
 
 (if (or
       (not comments-file-path)
@@ -246,7 +245,7 @@
     ; }
   (let ((comments-list
           (vector->list
-            (cdr (assoc 'comments response-json)))))
+            (alist-ref 'comments response-json))))
 
     (fold-right
       (lambda (comment clist)
@@ -254,9 +253,9 @@
         ; the same treeish this comment has associated with line x?
         (begin
         (let* (
-              (line-number (cdr (assoc 'line_number comment)))
-              (comment-treeish (cdr (assoc 'treeish comment)))
-              (treeish-in-map (cdr (assoc line-number line-treeish-map)))
+              (line-number     (alist-ref 'line_number comment))
+              (comment-treeish (alist-ref 'treeish     comment))
+              (treeish-in-map  (alist-ref line-number  line-treeish-map))
               )
         (if (equal?
               treeish-in-map
@@ -275,8 +274,8 @@
 (define (sort-comments-by-line comments-list)
   (sort comments-list
         (lambda (a b)
-          (< (cdr (assoc 'line_number a))
-             (cdr (assoc 'line_number b))))))
+          (< (alist-ref 'line_number a)
+             (alist-ref 'line_number b)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; extract the applicable comments, in order
@@ -302,9 +301,9 @@
       (begin
 
       (do-list comment applicable-comments
-
-          (format #t "~A: ~A~%~%" (cdr (assoc 'line_number comment))
-                           (cdr (assoc 'comment comment)))
+          (format #t "~A: ~A~%~%"
+                  (cdr (assoc 'line_number comment))
+                  (cdr (assoc 'comment     comment)))
           ); end do-list
       ); end begin
       ) ))
@@ -331,9 +330,9 @@
         (comment-request-url
           (sprintf
             "~A/v1/comments?project_name_hash=~A&file_path_hash=~A&treeishes=~A"
-            (alist-ref 'pc-url server-info)
-            (alist-ref 'project-name-hash server-info)
-            (alist-ref 'file-path-hash server-info)
+            (alist-ref   'pc-url            server-info)
+            (alist-ref   'project-name-hash server-info)
+            (alist-ref   'file-path-hash    server-info)
             (string-join unique-treeishes ",")))
 
         )
@@ -384,10 +383,16 @@
     "?"
     (string-join
       (list
-        (sprintf "project_name_hash=~A" (alist-ref 'project_name_hash data))
-        (sprintf "file_path_hash=~A" (alist-ref 'file_path_hash data))
-        (sprintf "treeish=~A" (alist-ref (alist-ref 'line_number data)  line-treeish-map))
-        (sprintf "line_number=~A" (alist-ref 'line_number data)))
+        (sprintf "project_name_hash=~A"
+          (alist-ref 'project_name_hash data))
+        (sprintf "file_path_hash=~A"
+          (alist-ref 'file_path_hash    data))
+        (sprintf "treeish=~A"
+          (alist-ref
+            (alist-ref 'line_number     data)
+            line-treeish-map))
+        (sprintf "line_number=~A"
+          (alist-ref 'line_number       data)))
       "&")
   )
 )
