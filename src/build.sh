@@ -35,7 +35,8 @@ csc -static -unit listicles -cJ listicles.scm
 
 echo "Building private_comments executable..."
 
-csc -link masufiles \
+csc -link masutils \
+    -link masufiles \
     -link pathname-expand \
     -static private_comments.scm
 

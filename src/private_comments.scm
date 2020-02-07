@@ -33,6 +33,7 @@
 (import spiffy-request-vars)
 (import uri-common)
 (import shell)
+(import masutils)
 (import masufiles)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -226,11 +227,16 @@
 ;
 (define (handle-comment add-or-delete params)
   ;TODO Update headers to specify
-    (if (has-required-keys? params)
-      (let ((project-hash      (cdr (assoc 'project_name_hash params)))
-            (file-path-hash    (cdr (assoc 'file_path_hash params)))
-            (line-no           (cdr (assoc 'line_number params)))
-            (treeish           (cdr (assoc 'treeish params))))
+    (if (and
+          (has-required-keys? params)
+          (not (or
+              (== (alist-ref 'treeish params) "00000000")
+              (null? (alist-ref 'treeish params)))))
+
+      (let ((project-hash      (alist-ref 'project_name_hash params))
+            (file-path-hash    (alist-ref 'file_path_hash params))
+            (line-no           (alist-ref 'line_number params))
+            (treeish           (alist-ref 'treeish params)))
         (let* (
               (project-dir (list->path (list base-directory project-hash)))
               (treeish-dir (list->path (list base-directory project-hash treeish)))
