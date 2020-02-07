@@ -27,9 +27,9 @@ fi
 
 echo "Building libraries"
 
+csc -static -unit masutils -cJ masutils.scm
 csc -static -unit masufiles -cJ masufiles.scm
 csc -static -unit masurequests -cJ masurequests.scm
-csc -static -unit masutils -cJ masutils.scm
 csc -static -unit comment-recording -cJ comment-recording.scm
 csc -static -unit listicles -cJ listicles.scm
 

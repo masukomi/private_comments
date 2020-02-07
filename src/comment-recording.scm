@@ -12,6 +12,7 @@
   (import simple-exceptions)
   (import shell)
   (import medea)
+  (import masutils)
   (import masurequests)
   (import srfi-13)
 
@@ -47,7 +48,7 @@
 
     (let ((treeish
             (alist-ref line-number line-treeish-map)))
-      (if treeish
+      (if (and (not (null? treeish)) (!= treeish "00000000"))
         (begin
           (list
             (cons 'project_name_hash (alist-ref 'project-name-hash server-info))
