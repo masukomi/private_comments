@@ -25,20 +25,23 @@ if [ "$1" != "" ]; then
   perl -pi -e "s/VERSION_NUMBER_HERE/$1/" private_comments.scm
 fi
 
-echo "Building private_comments executable..."
+echo "Building libraries"
 
-csc -static -unit masufiles -cJ masufiles.scm
-csc -link masufiles -static private_comments.scm
-
-
-echo "Building pc executable..."
-
-csc -static -unit pathname-expand -cJ pathname-expand.scm
 csc -static -unit masufiles -cJ masufiles.scm
 csc -static -unit masurequests -cJ masurequests.scm
 csc -static -unit masutils -cJ masutils.scm
 csc -static -unit comment-recording -cJ comment-recording.scm
 csc -static -unit listicles -cJ listicles.scm
+
+echo "Building private_comments executable..."
+
+csc -link masufiles \
+    -link pathname-expand \
+    -static private_comments.scm
+
+
+echo "Building pc executable..."
+
 csc -link masufiles \
     -link masurequests \
     -link masutils \
