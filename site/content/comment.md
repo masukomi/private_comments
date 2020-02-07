@@ -32,11 +32,14 @@ The comment itself is just random text to Private Comments. It can be plain text
 ## Comment Endpoints
 
 * [Add / Update a comment](#add-update-a-comment-endpoint)
+* [Delete a comment](#delete-a-comment-endpoint)
 * [Retrieve comments for a file](#retrieve-comments-for-a-file-endpoint)
+* [Server Status](#server-status)
 
 ## Add / Update a comment endpoint
 
 ```javascript
+// add or update a comment
 var data = JSON.stringify({
   "project_name_hash": "7135459ae30c0d5180b623986c420bf20856461cb6b9b860986a22c7654ed755",
   "file_path_hash": "faf3e6fc36b8524dad3aa4a317e734623f0dfcf6934a659015827406ebfb0c87",
@@ -61,6 +64,7 @@ xhr.send(data);
 ```
 
 ```shell
+# add or update a comment
 curl --request POST \
   --url http://localhost:5749/v1/comments \
   --header 'content-type: application/json' \
@@ -82,15 +86,85 @@ curl --request POST \
 }
 ```
 
-This endpoint creates or updates a single company object and takes the full list of parameters noted above.
+This endpoint creates or updates a single comment object and takes the full list of parameters noted above.
 
 #### HTTP Request
 
 `POST /v1/comments`
 
-## Retrieve comments for a file endpoint
+## Delete a comment endpoint
+
+This endpoint deletes a single comment and takes the comment parameters listed above, _minus_ the "comment". Note that the HTTP DELETE verb only officially supports query params. 
+
+This endpoint expects the following query parameters:
+
+| Parameter    | Type | Description |
+|--------------|------|-------------|
+| `project_hash_name` | String | (see above) |
+| `file_path_hash` | String | (see above)|
+| `treeish` | String | the single treeish relevant to the current version of line where the associated comment is to be deleted. |
+| `line_number` | Integer | true | An integer indicating the line number being commented on |
+
+
 
 ```javascript
+// delete a comment
+var data = null;
+
+var xhr = new XMLHttpRequest();
+xhr.withCredentials = true;
+
+xhr.addEventListener("readystatechange", function () {
+  if (this.readyState === this.DONE) {
+    console.log(this.responseText);
+  }
+});
+
+xhr.open("DELETE", "http://localhost:5749/v1/comments?project_name_hash=PROJECT_NAME_HASH&file_path_hash=FILE_PATH_HASH&treeish=SINGLE_TREEISH&line_number=LINE_NUMBER");
+
+xhr.send(data);
+```
+
+
+```shell
+# delete a comment
+curl --request DELETE \
+  --url 'http://localhost:5749/v1/comments?project_name_hash=PROJECT_NAME_HASH&file_path_hash=FILE_PATH_HASH&treeish=SINGLE_TREEISH&line_number=LINE_NUMBER'
+```
+> The code above will return JSON structured like this:
+
+```json
+{
+  "status": "SUCCESS",
+  "description": "comment removed"
+}
+```
+
+
+
+#### HTTP Request
+
+`DELETE /v1/comments?project_name_hash=<PROJECT_NAME_HASH>&file_path_hash=<FILE_PATH_HASH>&treeish=<SINGLE_TREEISH>&line_number=<LINE_NUMBER>`
+
+## Retrieve comments for a file endpoint
+
+
+This endpoint retrieves all the comments relevant to the treeishes in the current verison of the specified file. **Note that this may contain comments that are associated with a _treeish_ that is still in your file, but for a line that has since been replaced with another commit.**
+
+For example: Your first commit adds all the lines of a file. All lines of this file are associated with the same treeish. Then you leave a private comment on the 1st line of the file. The top half of the file is then changed in a subsequent commit. The lines in the bottom half of the file would be associated with the first commit still. Becaues you pass all relevant treeishes, the server would return the comment from the first line, because it was tied with a treeish that is still in the file, BUT that comment would no longer be relevant to the version of the file the user was viewing. It's up to the consumer of the API to address that.
+
+This endpoint expects the following query parameters:
+
+| Parameter| Type | Description |
+|----------|------|-------------|
+| `project_hash_name` | String | (see above) |
+| `file_path_hash` | String | (see above)|
+| `treeishes` | String | a comma-separated list of treeishes relevant to the current version of the file (generated via [git blame](https://www.git-scm.com/docs/git-blame)). |
+
+
+
+```javascript
+// retrieve a comment
 var data = null;
 
 var xhr = new XMLHttpRequest();
@@ -108,6 +182,7 @@ xhr.send(data);
 ```
 
 ```shell
+# retrieve a comment
 curl --request GET \
   --url 'http://localhost:5749/v1/comments?project_name_hash=7135459ae30c0d5180b623986c420bf20856461cb6b9b860986a22c7654ed755&file_path_hash=faf3e6fc36b8524dad3aa4a317e734623f0dfcf6934a659015827406ebfb0c87&treeishes=777a58e942164e94964999bcc7cd20bbcda28fe55ac38be28e530f58ddad5ad8%2C263fe246fb49b562e501427470efed926dc11cb9f8909be5b1987d3f2adff712'
 ```
@@ -130,17 +205,44 @@ curl --request GET \
 
 #### HTTP Request
 
-This endpoint retrieves all the comments relevant to the treeishes in the current verison of the specified file. **Note that this may contain comments that are associated with a _treeish_ that is still in your file, but for a line that has since been replaced with another commit.**
-
-For example: Your first commit adds all the lines of a file. All lines of this file are associated with the same treeish. Then you leave a private comment on the 1st line of the file. The top half of the file is then changed in a subsequent commit. The lines in the bottom half of the file would be associated with the first commit still. Becaues you pass all relevant treeishes, the server would return the comment from the first line, because it was tied with a treeish that is still in the file, BUT that comment would no longer be relevant to the version of the file the user was viewing. It's up to the consumer of the API to address that.
-
-This endpoint expects the following query parameters:
-
-| Parameter| Type | Description |
-|----------|------|-------------|
-| `project_hash_name` | String | (see above) |
-| `file_path_hash` | String | (see above)|
-| `treeishes` | String | a comma-separated list of treeishes relevant to the current version of the file (generated via [git blame](https://www.git-scm.com/docs/git-blame)). |
-
 `GET /v1/comments?project_hash_name={project_hash}&file_path_hash={file_path_hash}&treeishes={comma separated list of treeishes}`
 
+
+## Server Status
+Provides a means of performing a quick sanity-check that the server is actually up and running. Note that the status request is not currently versioned.
+
+```javascript
+// server status
+var data = null;
+
+var xhr = new XMLHttpRequest();
+xhr.withCredentials = true;
+
+xhr.addEventListener("readystatechange", function () {
+  if (this.readyState === this.DONE) {
+    console.log(this.responseText);
+  }
+});
+
+xhr.open("GET", "http://localhost:5749/status");
+
+xhr.send(data);
+
+```
+
+```shell
+# server status
+curl --request GET \
+  --url http://localhost:5749/status
+```
+
+> The code above will return JSON structured like this:
+
+```json
+{"status": "ALIVE"}
+```
+
+
+#### HTTP Request
+
+`GET /status`
