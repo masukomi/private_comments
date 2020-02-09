@@ -25,7 +25,14 @@ Private comments is a simple web server that runs locally and provides an API fo
 
 To launch it just run `private_comments` Next, access the endpoints as described in [the API docs](https://masukomi.github.io/private_comments).
 
+### Editor Plugins
+There is [a Vim Plugin](https://github.com/masukomi/vim_private_comments/) which leverages the `pc` client instead of talking directly to the APIs. This is the easiest way to bootstrap a plugin for your favorite editor. 
+
+See below for more details on creating a plugin for your favorite editor.
+
 **Note:** You'll have to add the executable to your [PATH](https://www.techrepublic.com/article/how-to-add-directories-to-your-path-in-linux/) if you didn't install it with homebrew.
+
+Once the `private_comments` server is running locally you can follow the instructions for the `pc` command line client (see below), or better yet, a plugin for your favorite editor. 
 
 
 ### Specifying a Port
@@ -51,16 +58,24 @@ To specify another directory just set the `PRIVATE_COMMENTS_DIR` environment var
 
 
 ## Creating An Editor Plugin
-There's not a lot to creating an editor plugin, and the Example Client (see below) can be used to rapidly bootstrap the process. 
+There's not a lot to creating an editor plugin, and the Example Client (see below) can be used to rapidly bootstrap the process. Under the covers it implements all the steps in the diagram below. The [Vim plugin](https://github.com/masukomi/vim_private_comments/) is an example of quickly bootstrapping a plugin. 
+
+Please contact [me](https://masukomi.org) if you'd like help creating a plugin for your favorite editor. 
 
 This diagram provides a high level overview of how data flows through the system. If you choose to interact with the API directly (recommended) you can find all the details in [the API docs](https://masukomi.github.io/private_comments).
 
 ![diagram of high level data flow](docs/instructional/data_flow.svg)
 
+I recommend using the Example Client (`pc`) to quickly bootstrap a plugin for your editor. Once you've got something that works, and looks good, you can go back and use tools like [libgit2](https://libgit2.org/) to query git without shelling out to the command line (as `pc` does), and make direct HTTP requests to the local `private_comments` server. The source to `pc` can be a reasonable blueprint for how to go about that.
+
+
 ## Example Client
 As a tool for testing the server, and bootstrapping plugin development Private Comments comes with an example command line client called `pc`
 
-Note: pc is _not_ intended to be the tool you use to record comments. It's a testing/proof-of-concept client implementation. It also makes for a _very_ fast way to implement an editor plugin. You just have to manage the capture of new comments and display of existing ones. You can pass the complications of interacting with an API off to the `pc` script.
+Following the usage guide below you can record, retrieve, and delete comments. Note that Private Comments can only record comments about lines that have been _committed_ in git. So, if it's a new line, or you've changed the line, you'll need to commit it before commenting.
+
+
+Note: pc is _not_ intended to be the tool you use to record comments.  It's a testing/proof-of-concept client implementation. It also makes for a _very_ fast way to implement an editor plugin. You just have to manage the capture of new comments and display of existing ones. You can pass the complications of interacting with git and an HTTP API off to the `pc` script.
 
 ```
 Usage: pc -f file-path [-fclsp] [option values]
@@ -131,9 +146,9 @@ If it's running `private_comments` will be shut down, and a new instance will be
 
 ## Contributing
 
-Pull requests are happily welcomed. Fork the repo. Make it better. Submit your changes. Note that all changes must be backwards compatible. We can't break existing plugins. If you're interested in a making a change that would break backwards compatibility please open a ticket to discuss it first. We'll create a `v2` version of the API if it's worth it.
+Private Comments is written in [Chicken Scheme](https://www.call-cc.org/). Pull requests with new features, or improved code, are happily welcomed. Fork the repo. Make it better. Submit your changes. Note that all changes must be backwards compatible. We can't break existing plugins. If you're interested in a making a change that would break backwards compatibility please open a ticket to discuss it first. We'll create a `v2` version of the API if it's worth it.
 
-If you're new to Scheme, or Chicken Scheme, don't worry. Just do your best and submit what you come up with. It's all good.
+If you're new to Scheme, or Chicken Scheme, don't worry. Just do your best and submit what you come up with. It's all good. I'm not an expert Schemer either.
 
-Please add a test to `src/tests/test_everything` that confirms your changes are good, and that existing features haven't been broken.
+Please add a test to `src/tests/test_server` (for server changes) or `src/tests/test_client` (for client changes) to confirm your changes are good, and that existing features haven't been broken.
 
