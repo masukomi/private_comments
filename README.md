@@ -4,6 +4,8 @@ Private comments allows you to leave “private comments” on specific lines of
 
 Imagine being dropped into a new codebase and having the freedom to leave whatever todo items and breadcrumbs you want without cluttering the codebase. Imagine working on a client’s codebase and not having to worry about what you say, or who sees it.
 
+Imagine leaving yourself a todo comment on a line, and having it disappear when you commit a change to that line. No more obsolete comments!
+
 Editor Plugins speak to a tiny Private Comments REST server running in your computer. For information about the APIs and creating a plugin for you favorite editor please [check out the API docs](https://masukomi.github.io/private_comments)
 
 ## Installation
