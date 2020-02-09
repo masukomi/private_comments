@@ -23,9 +23,14 @@ For other operating systems you'll need to build it from source (see below).
 
 Private comments is a simple web server that runs locally and provides an API for editor plugins to interact with.
 
-To launch it just run `private_comments` Next, access the endpoints as described in [the API docs](https://masukomi.github.io/private_comments).
+I'd recommend you launch it by running `private_comments && disown` This will boot the server in the background and allow you to close the window and not worry about it. If you need to stop the server you can run `pkill private_comments`
+
+Once you've got the server running, access the endpoints as described in [the API docs](https://masukomi.github.io/private_comments) or use an editor plugin or the `pc` command line client.
+
+If you've forgotten if the server is running or not you can check by running `pgrep private_comments` That will return the id of the process if it's running or nothing if it isn't.
 
 ### Editor Plugins
+
 There is [a Vim Plugin](https://github.com/masukomi/vim_private_comments/) which leverages the `pc` client instead of talking directly to the APIs. This is the easiest way to bootstrap a plugin for your favorite editor. 
 
 See below for more details on creating a plugin for your favorite editor.
