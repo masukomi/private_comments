@@ -109,7 +109,7 @@
 
 ;; VALIDATIONS
 ; have they specified the file we're dealing with?
-(if (equal? "UNKNOWN" (alist-ref 'comments-file-path cli-options))
+(if (not (alist-ref 'comments-file-path cli-options))
   (usage))
 
 ; if we're not killing it

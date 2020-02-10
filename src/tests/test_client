@@ -11,6 +11,11 @@
 #
 source ./test_suite_management.sh
 
+test_1_usage_message() {
+	usage=$($REPO_ROOT/src/pc)
+	assert_equals 0 $?
+}
+
 #
 # # test that it doesn't blow up when there aren't any comments
 test_2_no_comments () {
