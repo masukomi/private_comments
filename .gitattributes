@@ -1,0 +1,3 @@
+# hide docs and site from statistics
+docs/* linguist-documentation
+site/* linguist-documentation
