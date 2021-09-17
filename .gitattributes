@@ -1,3 +1,8 @@
-# hide docs and site from statistics
-docs/* linguist-documentation
-site/* linguist-documentation
+docs/** linguist-documentation
+site/** linguist-documentation
+*.html linguist-documentation
+*.js linguist-documentation
+*.css linguist-documentation
+*.scss linguist-documentation
+*.go linguist-vendored
+Makefile linguist-vendored
