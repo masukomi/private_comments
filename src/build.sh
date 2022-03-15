@@ -30,6 +30,7 @@ echo "Building libraries"
 csc -static -unit masutils -cJ masutils.scm
 csc -static -unit masufiles -cJ masufiles.scm
 csc -static -unit masurequests -cJ masurequests.scm
+csc -static -unit pathname-expand -cJ pathname-expand.scm
 csc -static -unit comment-recording -cJ comment-recording.scm
 csc -static -unit listicles -cJ listicles.scm
 
@@ -62,7 +63,7 @@ mkdir $version_dir
 cp private_comments $version_dir/
 cp pc $version_dir/
 tar -czf $version_dir.tgz $version_dir
-rm -rf $version_dir
+#rm -rf $version_dir
 
 echo "here's your SHA for homebrew"
 shasum -a 256 $version_dir.tgz
