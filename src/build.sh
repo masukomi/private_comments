@@ -62,6 +62,15 @@ rm -rf $version_dir
 mkdir $version_dir
 cp private_comments $version_dir/
 cp pc $version_dir/
+
+# copy them to the bin directory so that
+# you have a dir you can add to your path
+# that always has the latest executable in it
+mkdir -p ../bin
+cp private_comments ../bin/
+cp pc ../bin/
+
+# compress it
 tar -czf $version_dir.tgz $version_dir
 #rm -rf $version_dir
 
