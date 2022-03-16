@@ -114,10 +114,27 @@
 
 (define (request->data request)
   (if (request-has-message-body?)
-      (let ((raw-json (caar (read-urlencoded-request-data request))))
-        (read-json (symbol->string raw-json) )
+      (let ((raw-json (request-body request)))
+        (read-json raw-json)
         )
       '()))
+
+(define (method-with-body? method)
+    (or (eq? 'POST method)
+        (eq? 'PUT method)))
+
+(define (request-body request)
+  (if (method-with-body? (request-method request))
+      (let (
+              (p (request-port request))
+              (len (header-value 'content-length (request-headers request)))
+              )
+          (read-string len p)
+        )
+    '()))
+  ;WARNING: only supports url-encoded post body
+  ;          not multipart
+
 
 (define pc-headers
   (list (list 'content-type "application/json")))
