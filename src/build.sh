@@ -56,8 +56,10 @@ if [ "$1" != "" ]; then
   perl -pi -e "s/$1/VERSION_NUMBER_HERE/" pc.scm
   perl -pi -e "s/$1/VERSION_NUMBER_HERE/" private_comments.scm
 fi
+ARCHITECTURE=$(arch)
+version_dir="private_comments_$VERSION_"$ARCHITECTURE
 echo "creating compressed release file..."
-version_dir="private_comments_$VERSION"
+echo "  $version_dir.tgz"
 rm -rf $version_dir
 mkdir $version_dir
 cp private_comments $version_dir/
@@ -72,7 +74,7 @@ cp pc ../bin/
 
 # compress it
 tar -czf $version_dir.tgz $version_dir
-#rm -rf $version_dir
+rm -rf $version_dir
 
 echo "here's your SHA for homebrew"
 shasum -a 256 $version_dir.tgz
