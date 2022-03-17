@@ -25,7 +25,7 @@ if [ "$1" != "" ]; then
   perl -pi -e "s/VERSION_NUMBER_HERE/$1/" private_comments.scm
 fi
 
-echo "Building libraries"
+echo "Building libraries for $VERSION"
 
 csc -static -unit masutils -cJ masutils.scm
 csc -static -unit masufiles -cJ masufiles.scm
@@ -57,7 +57,7 @@ if [ "$1" != "" ]; then
   perl -pi -e "s/$1/VERSION_NUMBER_HERE/" private_comments.scm
 fi
 ARCHITECTURE=$(arch)
-version_dir="private_comments_$VERSION_"$ARCHITECTURE
+version_dir="private_comments_"$ARCHITECTURE"_"$VERSION
 echo "creating compressed release file..."
 echo "  $version_dir.tgz"
 rm -rf $version_dir
