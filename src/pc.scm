@@ -317,6 +317,8 @@
             )))
 
 (define (display-comments response-json line-treeish-map)
+  (format #t "project: ~A~%" project-name)
+  (format #t "project hash: ~A~%" project-name-hash)
 
   (let ((applicable-comments
           (extract-applicable-comments-sorted
@@ -329,13 +331,13 @@
     ; "12: foo berries"
     (if (> (length applicable-comments) 0)
       (begin
-
-      (do-list comment applicable-comments
-          (format #t "~A: ~A~%~%"
-                  (cdr (assoc 'line_number comment))
-                  (cdr (assoc 'comment     comment)))
-          ); end do-list
+        (do-list comment applicable-comments
+            (format #t "~A: ~A~%~%"
+                    (cdr (assoc 'line_number comment))
+                    (cdr (assoc 'comment     comment)))
+            ); end do-list
       ); end begin
+      (format #t "No comments found.")
       ) ))
 
 
@@ -358,7 +360,6 @@
 
 
 (define (request-comments server-info treeishes )
-
   (let* (
         (unique-treeishes (delete-duplicates treeishes))
         (comment-request-url
@@ -367,18 +368,14 @@
             (alist-ref   'pc-url            server-info)
             (alist-ref   'project-name-hash server-info)
             (alist-ref   'file-path-hash    server-info)
-            (string-join unique-treeishes ",")))
-
-        )
+            (string-join unique-treeishes ","))))
 
         (display-comments
           (read-json
             (get-or-die
               comment-request-url
               "Error retrieving comments:~%~A~%"))
-          line-treeish-map)
-  )
-)
+          line-treeish-map)))
 
 
 (define (generate-post-url server-info)
