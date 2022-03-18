@@ -44,11 +44,11 @@ csc -link masutils \
 
 echo "Building pc executable..."
 
-csc -link masufiles \
+csc -link comment-recording \
+    -link listicles \
+    -link masufiles \
     -link masurequests \
     -link masutils \
-    -link comment-recording \
-    -link listicles \
     -static pc.scm
 
 
@@ -69,8 +69,8 @@ cp pc $version_dir/
 # you have a dir you can add to your path
 # that always has the latest executable in it
 mkdir -p ../bin
-cp private_comments ../bin/
-cp pc ../bin/
+mv private_comments ../bin/
+mv pc ../bin/
 
 # compress it
 tar -czf $version_dir.tgz $version_dir
@@ -92,9 +92,9 @@ function print_dlibs () {
       echo " - dylib $dylib"
     done
   fi
-
 }
 
+echo "===================="
 print_dlibs "private_comments"
 print_dlibs "pc"
 

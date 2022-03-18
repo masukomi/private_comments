@@ -6,7 +6,20 @@ Imagine being dropped into a new codebase and having the freedom to leave whatev
 
 Imagine leaving yourself a todo comment on a line, and having it disappear when you commit a change to that line. No more obsolete comments!
 
-Editor Plugins speak to a tiny Private Comments REST server running in your computer. For information about the APIs and creating a plugin for you favorite editor please [check out the API docs](https://masukomi.github.io/private_comments)
+![preview of emacs plugin](https://masukomi.github.io/private_comments/images/emacs_demo.gif)
+
+Editor Plugins speak to a tiny Private Comments REST server running in your computer. For information about the APIs and creating a plugin for you favorite editor please [check out the API docs](https://masukomi.github.io/private_comments).
+
+Note: _Private Comments currently assumes you're using git for your version control system._ It's possible to use with editor plogins that know about other version control systems, but instructions are currently not provided for writing those.
+
+### Special Design Features
+
+* Comments are tied to a specific commit. Each comment is associated with the commit that produced the line you're commenting on. When that line is no longer in the file, the comment will disappear. However, if you roll back your git repository to a prior commit, it will _reappear_ so you can see any comments that were relevant at the time.
+* Comments created with Private Comments are stored in a sharable git repository. A group of freelancers working on a client codebase can leave inline comments for each other as they learn the codebase without altering the source code itself. 
+* Project names and file names are _never_ stored. This way you can back up your private comments repo to a third party server without violating your NDA. If the third party server is compromised the hackers won't be able to derive anything from a leaked filename or project name. If you're not encrypting your comments then you just need to be careful to not include any secrets in your comments.
+* Comments can be encrypted. Encryption is _optionally_ handled on the client side. The Private Comments server only cares that you're passing it a string. It doesn't care what that string is. Encryption / Decryption is fairly easy to add to any private comments browser plugin. 
+
+
 
 ## Installation
 
@@ -35,10 +48,12 @@ If you've forgotten if the server is running or not you can check by running `pg
 
 There is [a Vim Plugin](https://github.com/masukomi/vim_private_comments/) which leverages the `pc` client instead of talking directly to the APIs. This is the easiest way to bootstrap a plugin for your favorite editor. 
 
+The [Emacs plugin](https://github.com/masukomi/private-comments-mode#readme) does not use the `pc` client and speaks directly to the server. This is the preferred way of doing things.
+
 See below for more details on creating a plugin for your favorite editor.
 
-**Note:** You'll have to add the executable to your [PATH](https://www.techrepublic.com/article/how-to-add-directories-to-your-path-in-linux/) if you didn't install it with homebrew.
-
+If you don't use Vim or Emacs you can still view private comments with the `pc` client but the experience is sub-optimal. The `pc` client is really designed for testing and bootstrapping if making http calls from your favorite editor is difficult.
+ 
 Once the `private_comments` server is running locally you can follow the instructions for the `pc` command line client (see below), or better yet, a plugin for your favorite editor. 
 
 
@@ -65,7 +80,7 @@ To specify another directory just set the `PRIVATE_COMMENTS_DIR` environment var
 
 
 ## Creating An Editor Plugin
-There's not a lot to creating an editor plugin, and the Example Client (see below) can be used to rapidly bootstrap the process. Under the covers it implements all the steps in the diagram below. The [Vim plugin](https://github.com/masukomi/vim_private_comments/) is an example of quickly bootstrapping a plugin. 
+There's not a lot to creating an editor plugin, and the Example Client (see below) can be used to rapidly bootstrap the process. Under the covers it implements all the steps in the diagram below. The [Vim plugin](https://github.com/masukomi/vim_private_comments/) is an example of quickly bootstrapping a plugin. The [Emacs plugin](https://github.com/masukomi/private-comments-mode#readme) speaks directly to the local server, which makes it dramatically easier to inline the comments. 
 
 Please contact [me](https://masukomi.org) if you'd like help creating a plugin for your favorite editor. 
 
@@ -73,25 +88,29 @@ This diagram provides a high level overview of how data flows through the system
 
 ![diagram of high level data flow](docs/instructional/data_flow.svg)
 
-I recommend using the Example Client (`pc`) to quickly bootstrap a plugin for your editor. Once you've got something that works, and looks good, you can go back and use tools like [libgit2](https://libgit2.org/) to query git without shelling out to the command line (as `pc` does), and make direct HTTP requests to the local `private_comments` server. The source to `pc` can be a reasonable blueprint for how to go about that.
+I recommend using the Example Client (`pc`) as a reference to confirm that your plugin is doing the right thing, and that the data you generate is readable by another client. The source to `pc` can be a reasonable blueprint for how to go about building a client.
 
 
 ## Example Client
 As a tool for testing the server, and bootstrapping plugin development Private Comments comes with an example command line client called `pc`
 
-Following the usage guide below you can record, retrieve, and delete comments. Note that Private Comments can only record comments about lines that have been _committed_ in git. So, if it's a new line, or you've changed the line, you'll need to commit it before commenting.
+Following the usage guide below you can record, retrieve, and delete comments. Note that Private Comments can only record comments about lines that have been _committed_ in git. So, if it's a new line, or you've changed the line, you'll need to commit it before commenting. Please reference the diagram above for how this should work.
 
-
-Note: pc is _not_ intended to be the tool you use to record comments.  It's a testing/proof-of-concept client implementation. It also makes for a _very_ fast way to implement an editor plugin. You just have to manage the capture of new comments and display of existing ones. You can pass the complications of interacting with git and an HTTP API off to the `pc` script.
+Note: pc is _not_ intended to be the tool you use to record comments.  It's a testing/proof-of-concept client implementation. With that said, it certainly _can_ be done and the Vim plugin does exactly that.
 
 ```
-Usage: pc -f file-path [-fclsp] [option values]
+❯ pc --help
+Private Comments client v1.2.4
+Usage: pc -f file-path [-fcdlsp] [option values]
      -f --file=<path>                   Relative path from root of git repo. Ex. "src/pc.scm"
      -c --comment=<Comment>             A comment to be stored
+     -d --delete                        Will delete comment at specified location (line & file)
      -l --line=<Line Number>            The line number of the comment to be stored
-     -s --server=<Server URL>           Private Comments Server Url [default: http://0.0.0.0]
      -p --port=<Server Port>            Private Comments Server Port [default: 5749]
+     -s --server=<Server URL>           Private Comments Server Url [default: http://0.0.0.0]
      -h --help                          Display this text
+
+Report bugs at https://github.com/masukomi/private_comments/issues
 ```
 
 To retrieve comments for a given file you'd say something like this:
@@ -123,7 +142,6 @@ It will exit with an error code if you're commenting on an uncommitted line.
 
 
 You could use this as a quick starting point for an editor plugin, or tweak the code to make it generate different output. In the long run [using the API ](https://masukomi.github.io/private_comments) is going to be a better solution. 
-
 
 
 
