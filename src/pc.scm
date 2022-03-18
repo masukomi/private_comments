@@ -1,22 +1,17 @@
 #!/usr/bin/env csi -script
 
+(import args)
 (import chicken.file)
 (import chicken.format)
 (import chicken.io)
 (import chicken.port)
+(import chicken.process-context)
 (import chicken.sort)
 (import chicken.string)
 (import chicken.syntax)
-(import chicken.process-context)
-(import args)
-(import comment-recording)
 (import filepath)
 (import format)
 (import http-client)
-(import listicles)
-(import masufiles)
-(import masurequests)
-(import masutils)
 (import medea)
 (import message-digest-byte-vector)
 (import sha2)
@@ -25,6 +20,14 @@
 (import simple-loops)
 (import srfi-1)
 (import srfi-13)
+
+; local libs
+(import comment-recording)
+(import listicles)
+(import masufiles)
+(import masurequests)
+(import masutils)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define cli-options
