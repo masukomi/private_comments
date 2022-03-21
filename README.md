@@ -100,7 +100,7 @@ Note: pc is _not_ intended to be the tool you use to record comments.  It's a te
 
 ```
 ❯ pc --help
-Private Comments client v1.2.4
+Private Comments client v1.3
 Usage: pc -f file-path [-fcdlsp] [option values]
      -f --file=<path>                   Relative path from root of git repo. Ex. "src/pc.scm"
      -c --comment=<Comment>             A comment to be stored
@@ -108,6 +108,7 @@ Usage: pc -f file-path [-fcdlsp] [option values]
      -l --line=<Line Number>            The line number of the comment to be stored
      -p --port=<Server Port>            Private Comments Server Port [default: 5749]
      -s --server=<Server URL>           Private Comments Server Url [default: http://0.0.0.0]
+     -x --debug                         display comments with debugging output
      -h --help                          Display this text
 
 Report bugs at https://github.com/masukomi/private_comments/issues

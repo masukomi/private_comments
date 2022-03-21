@@ -38,6 +38,7 @@
     (comment . ,#f)
     (line-number . -1)
     (kill-it . ,#f)
+    (debug-it . ,#f)
     ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -64,6 +65,9 @@
     (args:make-option
       (s server) (required: "<Server URL>")
         "Private Comments Server Url [default: http://0.0.0.0]")
+    (args:make-option
+      (x debug) #:none
+        "display comments with debugging output")
     (args:make-option
       (h help) #:none
         "Display this text"
@@ -96,6 +100,7 @@
            (server      (alist-ref 'server  options))
            (port        (alist-ref 'port    options))
            (kill        (alist-ref 'delete  options))
+           (debug       (alist-ref 'debug  options))
            )
       (if file
         (set-cdr! (assoc 'comments-file-path cli-options) file))
@@ -107,8 +112,11 @@
         (set-cdr! (assoc 'pc-server-port      cli-options) port))
       (if comment-arg
         (set-cdr! (assoc 'comment             cli-options) comment-arg))
+      (if debug
+          (set-cdr! (assoc 'debug-it          cli-options) debug))
       (if kill
-        (set-cdr! (assoc 'kill-it             cli-options) kill))))
+          (set-cdr! (assoc 'kill-it           cli-options) kill))
+      ))
 
 ;; VALIDATIONS
 ; have they specified the file we're dealing with?
@@ -315,10 +323,34 @@
               response-json line-treeish-map)))
   (sort-comments-by-line applicable-comments
             )))
-
-(define (display-comments response-json line-treeish-map)
+(define (debug-comments response-json line-treeish-map)
   (format #t "project: ~A~%" project-name)
   (format #t "project hash: ~A~%" project-name-hash)
+
+  (let ((applicable-comments
+          (extract-applicable-comments-sorted
+            response-json
+            line-treeish-map)))
+
+    ; iterate and print
+    ; each comment starts with its line number
+    ; so "foo berries" on line 12 becomes
+    ; "12: foo berries"
+    ; "treeish: <treeish here>"
+    (if (> (length applicable-comments) 0)
+      (begin
+        (do-list comment applicable-comments
+            (format #t "~A: ~A~%"
+                    (cdr (assoc 'line_number comment))
+                    (cdr (assoc 'comment     comment)))
+            (format #t "treeish: ~A~%~%"
+                    (cdr (assoc 'treeish comment))
+                    )
+            ); end do-list
+      ); end begin
+      (format #t "No comments found.")
+      ) ))
+(define (display-comments response-json line-treeish-map)
 
   (let ((applicable-comments
           (extract-applicable-comments-sorted
@@ -337,7 +369,6 @@
                     (cdr (assoc 'comment     comment)))
             ); end do-list
       ); end begin
-      (format #t "No comments found.")
       ) ))
 
 
@@ -368,14 +399,18 @@
             (alist-ref   'pc-url            server-info)
             (alist-ref   'project-name-hash server-info)
             (alist-ref   'file-path-hash    server-info)
-            (string-join unique-treeishes ","))))
-
-        (display-comments
-          (read-json
-            (get-or-die
-              comment-request-url
-              "Error retrieving comments:~%~A~%"))
-          line-treeish-map)))
+            (string-join unique-treeishes ",")))
+        (comments-json (read-json
+              (get-or-die
+                comment-request-url
+                "Error retrieving comments:~%~A~%")))
+        )
+    (if (not (cdr (assoc 'debug-it cli-options)))
+          (display-comments comments-json line-treeish-map)
+          (begin
+            (format #t "file-path-hash: ~A~%" (alist-ref 'file-path-hash server-info))
+            (format #t "file treeishes: ~%~{  ~A~%~}" unique-treeishes)
+            (debug-comments comments-json line-treeish-map)))))
 
 
 (define (generate-post-url server-info)
