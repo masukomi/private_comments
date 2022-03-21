@@ -1,3 +1,5 @@
+*Note:* The lack of activity here doesn't mean this repo is abandoned. It's just _very stable code_ that doesn't need poking. I rely on it daily. ;)
+
 ## ![private comments logo](site/static/images/logo.png) Private Comments
 
 Private comments allows you to leave “private comments” on specific lines of a codebase that are not stored in the codebase.
