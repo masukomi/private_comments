@@ -65,7 +65,7 @@ mkdir $version_dir
 cp private_comments $version_dir/
 cp pc $version_dir/
 
-# copy them to the bin directory so that
+# move them to the bin directory so that
 # you have a dir you can add to your path
 # that always has the latest executable in it
 mkdir -p ../bin
@@ -95,8 +95,8 @@ function print_dlibs () {
 }
 
 echo "===================="
-print_dlibs "private_comments"
-print_dlibs "pc"
+print_dlibs "../bin/private_comments"
+print_dlibs "../bin/pc"
 
 echo "===================="
 echo "Done."
