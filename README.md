@@ -10,7 +10,7 @@ Imagine leaving yourself a todo comment on a line, and having it disappear when 
 
 ![preview of emacs plugin](https://masukomi.github.io/private_comments/images/emacs_demo.gif)
 
-Editor Plugins speak to a tiny Private Comments REST server running in your computer. For information about the APIs and creating a plugin for you favorite editor please [check out the API docs](https://masukomi.github.io/private_comments).
+Editor Plugins speak to a tiny Private Comments REST server running in your computer. For information about the APIs and creating a plugin for you favorite editor please read "Creating An Editor Plugin" below.
 
 Note: _Private Comments currently assumes you're using git for your version control system._ It's possible to use with editor plogins that know about other version control systems, but instructions are currently not provided for writing those.
 
