@@ -7,6 +7,10 @@
 ; If you define the PRIVATE_COMMENTS_PORT environment variable
 ; it will use that instead.
 ;
+; If you have a global templatedir git directive that sets up
+; a pre-commit hook it _will_ be disabled in the Private Comments
+; repos _unless_ you set the PRIVATE_COMMENTS_ALLOW_PRE_COMMIT=true
+;
 ; Data will be stored in ~/.config/private_comments
 ; If you define the PRIVATE_COMMENTS_DIR evironment variable
 ; it will use that instead.
@@ -15,6 +19,7 @@
 (import chicken.base)
 (import chicken.syntax)
 (import chicken.file)
+(import chicken.file.posix)
 (import chicken.format)
 (import chicken.io)
 (import chicken.irregex)
@@ -75,7 +80,26 @@
     (if (not (file-exists? git-dir-path))
           (begin
             (print (sprintf "initializing repo in ~A" project-dir-path) )
-            (run ,(sprintf "cd ~A;git init" project-dir-path))))))
+            (run ,(sprintf "cd ~A;git init" project-dir-path))
+            (disable-pre-commits project-dir-path git-dir-path)
+            ))))
+
+; makes sure that if any pre-commit files came along for the
+; ride in the `git init` phase they are disabled
+; this could happen (and did) as the result of a global templatdir config
+(define (disable-pre-commits project-dir-path git-dir-path)
+  (if (not
+       (equal? (get-environment-variable "PRIVATE_COMMENTS_ALLOW_PRE_COMMIT")
+            "true"))
+    ; If "true", I hope you know what you're doing. ;)
+    (let ((pre-commit-path (list->path (list git-dir-path "hooks" "pre-commit"))))
+        (if (and (file-exists? pre-commit-path) (file-executable? pre-commit-path))
+            (begin
+              (set-file-permissions! pre-commit-path 660)
+              ; now disable the git warning about it not being executable
+              ; _in this repo only_
+              (run (sprintf "cd ~A; git config advice.ignoredHook false" project-dir-path))
+              )))))
 
 (define (add-note-to-git project-dir-path note-file)
   ; NOTE: if you push the same note twice git will have a non-zero exit code here.
@@ -88,7 +112,7 @@
   ; NOTE: Intentionally ignoring any complaints about file not existing
   ; & NOT checking if file exists because it may have been
   ; deleted from working dir manually but not removed from git.
-  (run* ,(sprintf "cd ~A; git rm ~A && git commit -m \"deleting comment\"" project-dir-path note-file)))
+  (run* ,(sprintf "cd ~A; git rm -f ~A && git commit -m \"deleting comment\"" project-dir-path note-file)))
 
 
 (define (filename->path-hash filename)
