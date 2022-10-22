@@ -80,7 +80,6 @@ By default `private_comments` will store its data in `~/.config/private_comments
 To specify another directory just set the `PRIVATE_COMMENTS_DIR` environment variable to a valid path.
 
 
-
 ## Creating An Editor Plugin
 There's not a lot to creating an editor plugin, and the Example Client (see below) can be used to rapidly bootstrap the process. Under the covers it implements all the steps in the diagram below. The [Vim plugin](https://github.com/masukomi/vim_private_comments/) is an example of quickly bootstrapping a plugin. The [Emacs plugin](https://github.com/masukomi/private-comments-mode#readme) speaks directly to the local server, which makes it dramatically easier to inline the comments. 
 
@@ -172,6 +171,13 @@ $ bash_unit tests/test_client
 
 If it's running `private_comments` will be shut down, and a new instance will be run. The new instance will store its test data separately so you don't have to worry about messing up, or loosing, any existing comments you may have created with private comments.
 
+
+## Troubleshooting
+
+### Pre-Commits Warning
+This is an edge case, but if you have set up a `templatedir` directive in your `~/.gitconfig` that has a pre-commit hook, Private Comments will disable that hook, _in its own repos only_ unless you set the `PRIVATE_COMMENTS_ALLOW_PRE_COMMIT` environment variable to `true`. Note that this is almost _never_ a good idea. If your pre-commit hooks fails it will break private comments ability to store your comments.
+
+
 ## Contributing
 
 Private Comments is written in [Chicken Scheme](https://www.call-cc.org/). Pull requests with new features, or improved code, are happily welcomed. Fork the repo. Make it better. Submit your changes. Note that all changes must be backwards compatible. We can't break existing plugins. If you're interested in a making a change that would break backwards compatibility please open a ticket to discuss it first. We'll create a `v2` version of the API if it's worth it.
@@ -179,4 +185,3 @@ Private Comments is written in [Chicken Scheme](https://www.call-cc.org/). Pull 
 If you're new to Scheme, or Chicken Scheme, don't worry. Just do your best and submit what you come up with. It's all good. I'm not an expert Schemer either.
 
 Please add a test to `src/tests/test_server` (for server changes) or `src/tests/test_client` (for client changes) to confirm your changes are good, and that existing features haven't been broken.
-
