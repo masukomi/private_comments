@@ -15,6 +15,10 @@ Here's what I've found:
   Enables commenting on a file level, rather than line specific comments. It lets you create your own marginalia. 
 * [In Place Annotations](https://www.emacswiki.org/emacs/InPlaceAnnotations)
 
+## VS Code
+* [Codex](https://usecodex.com/)
+  JetBrains support coming "soon". Comments are in a sidebar instead of inlined, and support markdown and GitHub style "labels", & mentioning team members for notification purposes. Not open-source, appears to be a fledgling pre-revenue company.
+
 ## Other Editors
 Nothing. If it exists, I haven't seen it, and would love it if you'd file an issue, or make a Pull Request to update this page with information about plugins for other editors.
 
