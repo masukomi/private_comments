@@ -1,8 +1,29 @@
 *Note:* The lack of activity here doesn't mean this repo is abandoned. It's just _very stable code_ that doesn't need poking. I rely on it daily. ;)
 
-## ![private comments logo](site/static/images/logo.png) Private Comments
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
 
-Private comments allows you to leave “private comments” on specific lines of a codebase that are not stored in the codebase.
+- [Special Design Features](#special-design-features)
+- [Installation](#installation)
+- [MacOS via Homebrew](#macos-via-homebrew)
+- [Other](#other)
+- [Usage](#usage)
+- [Editor Plugins](#editor-plugins)
+- [Specifying a Port](#specifying-a-port)
+- [Specifying a Directory](#specifying-a-directory)
+- [Additional Information](#additional-information)
+- [Creating An Editor Plugin](#creating-an-editor-plugin)
+- [Example Client](#example-client)
+- [Building From Source](#building-from-source)
+- [Troubleshooting](#troubleshooting)
+- [Pre-Commits Warning](#pre-commits-warning)
+- [Contributing](#contributing)
+
+<!-- markdown-toc end -->
+
+
+
+![private comments logo](site/static/images/logo.png) Private comments allows you to leave “private comments” on specific lines of a codebase that are not stored in the codebase.
 
 Imagine being dropped into a new codebase and having the freedom to leave whatever todo items and breadcrumbs you want without cluttering the codebase. Imagine working on a client’s codebase and not having to worry about what you say, or who sees it.
 
@@ -78,6 +99,10 @@ export PRIVATE_COMMENTS_PORT=3111
 By default `private_comments` will store its data in `~/.config/private_comments`
 
 To specify another directory just set the `PRIVATE_COMMENTS_DIR` environment variable to a valid path.
+
+### Additional Information
+- [Backing Up Your Private Comments](https://github.com/masukomi/private_comments/blob/master/BACKING_UP_DATA.md#readme)
+- [Competitors](https://github.com/masukomi/private_comments/blob/master/COMPETITORS.md#readme)
 
 
 ## Creating An Editor Plugin
@@ -170,12 +195,6 @@ $ bash_unit tests/test_client
 ```
 
 If it's running `private_comments` will be shut down, and a new instance will be run. The new instance will store its test data separately so you don't have to worry about messing up, or loosing, any existing comments you may have created with private comments.
-
-
-## Troubleshooting
-
-### Pre-Commits Warning
-This is an edge case, but if you have set up a `templatedir` directive in your `~/.gitconfig` that has a pre-commit hook, Private Comments will disable that hook, _in its own repos only_ unless you set the `PRIVATE_COMMENTS_ALLOW_PRE_COMMIT` environment variable to `true`. Note that this is almost _never_ a good idea. If your pre-commit hooks fails it will break private comments ability to store your comments.
 
 
 ## Contributing
