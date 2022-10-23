@@ -179,7 +179,8 @@
   (json-has-keys? json '(project_name_hash
                      file_path_hash
                      treeish
-                     line_number)))
+                     line_number
+                     line_hash)))
 
 (define (files-for-treeish treeish-dir)
   (if  (and (file-exists? treeish-dir) (file-readable? treeish-dir))
