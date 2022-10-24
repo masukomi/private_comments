@@ -114,7 +114,7 @@ Please contact [me](https://masukomi.org) if you'd like help creating a plugin f
 
 This diagram provides a high level overview of how data flows through the system. If you choose to interact with the API directly (recommended) you can find all the details in [the API docs](https://masukomi.github.io/private_comments).
 
-![diagram of high level data flow](docs/instructional/data_flow.svg)
+![diagram of high level data flow](docs/instructional/data_flow.png)
 
 I recommend using the Example Client (`pc`) as a reference to confirm that your plugin is doing the right thing, and that the data you generate is readable by another client. The source to `pc` can be a reasonable blueprint for how to go about building a client.
 
