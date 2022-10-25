@@ -4,6 +4,7 @@
 (import chicken.file)
 (import chicken.format)
 (import chicken.io)
+(import chicken.irregex)
 (import chicken.port)
 (import chicken.process-context)
 (import chicken.sort)
@@ -55,6 +56,9 @@
       (d delete) #:none
         "Will delete comment at specified location (line & file)")
     (args:make-option
+      (g line-hash) (required: "<Line Hash>")
+        "The SHA 256 hash of the line being commented on.")
+    (args:make-option
       (l line) (required: "<Line Number>")
         "The line number of the comment to be stored"
         (set! arg (string->number (or arg "-1"))))
@@ -80,7 +84,7 @@
  (with-output-to-port (current-error-port)
    (lambda ()
   (print "Private Comments client VERSION_NUMBER_HERE")
-  (format #t "Usage: ~A -f file-path [-fcdlsp] [option values]~%" (car (argv)) )
+  (format #t "Usage: ~A -f file-path [-cdfglsp] [option values]~%" (car (argv)) )
   (print (parameterize (  (args:separator " ")
                           (args:indent    5)
                           (args:width     35))
@@ -94,18 +98,21 @@
 (receive (options operands)
     (args:parse (command-line-arguments) opts)
     (let (
-           (file        (alist-ref 'file    options))
-           (comment-arg (alist-ref 'comment options))
-           (line        (alist-ref 'line    options))
-           (server      (alist-ref 'server  options))
-           (port        (alist-ref 'port    options))
-           (kill        (alist-ref 'delete  options))
-           (debug       (alist-ref 'debug  options))
+           (file        (alist-ref 'file      options))
+           (comment-arg (alist-ref 'comment   options))
+           (line        (alist-ref 'line      options))
+           (line-hash   (alist-ref 'line-hash options))
+           (server      (alist-ref 'server    options))
+           (port        (alist-ref 'port      options))
+           (kill        (alist-ref 'delete    options))
+           (debug       (alist-ref 'debug     options))
            )
       (if file
         (set-cdr! (assoc 'comments-file-path cli-options) file))
       (if line
         (set-cdr! (assoc 'line-number         cli-options) line))
+      (if line-hash
+        (set-cdr! (assoc 'line-hash           cli-options) line-hash))
       (if server
         (set-cdr! (assoc 'pc-server-url       cli-options) server))
       (if port
@@ -129,6 +136,7 @@
 (if (and
       (not    (alist-ref 'kill-it     cli-options))
       (eq? #f (alist-ref 'comment     cli-options))
+      (eq? #f (alist-ref 'line-hash   cli-options))
       (>      (alist-ref 'line-number cli-options) -1))
   (begin
     (format (current-error-port) "You must specify a comment to record on line ~A~%" (alist-ref 'line-number cli-options))
@@ -137,11 +145,19 @@
 ; if there's a comment but no line number
 (if (and
       (not (eq? #f (alist-ref 'comment     cli-options)))
-      (eq?         (alist-ref 'line-number cli-options) -1))
+      (or (eq?         (alist-ref 'line-number cli-options) -1)
+          (eq? #f (alist-ref 'line-hash cli-options))
+          ))
   (begin
-    (format (current-error-port) "You must specify a line number to comment on~%")
+    (format (current-error-port) "You must specify a line number to comment on & its hash~%")
     (exit 14)))
 
+; if there's no line_hash
+(if
+      (eq? #f (alist-ref 'line-hash     cli-options))
+  (begin
+    (format (current-error-port) "You must specify a line hash to ensure we display the comment on the right line after edits.~%")
+    (exit 15)))
 ;; END VALIDATION
 
 ;; END PROCESSING COMMAND LINE ARGS
@@ -277,7 +293,9 @@
     ;     {
     ;       "treeish": "<hash here>",
     ;       "line_number": 4,
-    ;       "comment": "comment text here"
+    ;       "line_hash": "<hash here OR nil>",
+    ;       "comment": "comment text here",
+    ;       "saved_at": 12345
     ;     }
     ;   ]
     ; }
@@ -306,6 +324,43 @@
         )
         ); end lambda
       '() comments-list)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; generate a hash for a given line
+(define (hash-for-line line)
+  (message-digest-string
+   (sha256-primitive)
+   (irregex-replace/all "^[[:space:]]*|[[:space:]]*$" line)
+  ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; git show command
+(define cat-command
+  (sprintf "cat ~A~A~A '"
+           git-repo-root
+           directory-separator-string
+           (alist-ref 'comments-file-path cli-options))
+  )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; extract line hashes
+(define line-hashes
+  (map
+   (lambda (line) (hash-for-line line))
+   (string-split cat-command)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; map the hash to the line it came from
+(define line-hash-map
+  (list-by-index line-hashes '() 1)
+  )
+(define hash-line-map
+; FINISH ME
+; iterate over the line-hash-map
+; test if the value is a key
+; - if not make it a new key with the corresponding key as a value in a list
+;   e.g. 1->abc123  becomes  abc123 -> (1)
+; - if so, append the key to the value list.
+;   e.g  2->abc123 gets added to abc123 -> (1) to make abc123 -> (1 2)
+;
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; sort the comments by line number (ascending)
