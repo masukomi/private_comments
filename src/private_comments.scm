@@ -26,6 +26,7 @@
 (import chicken.string)
 (import chicken.port)
 (import chicken.process-context)
+(import chicken.time)
 (import chicken.condition)
 (import srfi-13)
 (import srfi-18); multithreading support
@@ -278,7 +279,10 @@
       (let ((project-hash      (alist-ref 'project_name_hash params))
             (file-path-hash    (alist-ref 'file_path_hash params))
             (line-no           (alist-ref 'line_number params))
-            (treeish           (alist-ref 'treeish params)))
+            (treeish           (alist-ref 'treeish params))
+            ; record the epoch time when the comment was added
+            (dated-params      (cons (list 'saved_at (current-seconds)) params))
+            )
         (let* (
               (project-dir (list->path (list base-directory project-hash)))
               (treeish-dir (list->path (list base-directory project-hash treeish)))
@@ -288,13 +292,14 @@
                            (list treeish-dir
                                  file-name)))
               )
+
           (guarantee-dir treeish-dir)
           (guarantee-git-project project-dir)
           ; TODO switch on add-or-delete
           (if (equal? add-or-delete 'add)
             (begin ; ADD
               ; (format (current-error-port) "XXX WRITING to ~A~%" file-path)
-              (string->file (json->string params) file-path)
+              (string->file (json->string dated-params) file-path)
               ; guarantees consistent formatting
               ; passes _everything_ to the filesystem
               ; including unexpected key value pairs
