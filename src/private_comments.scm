@@ -281,7 +281,14 @@
             (line-no           (alist-ref 'line_number params))
             (treeish           (alist-ref 'treeish params))
             ; record the epoch time when the comment was added
-            (dated-params      (cons (list 'saved_at (current-seconds)) params))
+            (dated-params
+             (if (not (json-hash-key? params 'saved_at))
+                 (cons (list 'saved_at (current-seconds)) params)
+                 (begin
+                   (set-cdr! (assoc 'saved_at params) (current-seconds))
+                   params
+                 ))
+             )
             )
         (let* (
               (project-dir (list->path (list base-directory project-hash)))
