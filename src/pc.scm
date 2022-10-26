@@ -21,6 +21,7 @@
 (import simple-loops)
 (import srfi-1)
 (import srfi-13)
+(import srfi-69)
 
 ; local libs
 (import comment-recording)
@@ -308,18 +309,28 @@
         ; Is the treeish the file has associated with line x
         ; the same treeish this comment has associated with line x?
         (begin
-        (let* (
-              (line-number     (alist-ref 'line_number comment))
-              (comment-treeish (alist-ref 'treeish     comment))
-              (treeish-in-map  (alist-ref line-number  line-treeish-map))
+          (let* (
+                (line-number     (alist-ref 'line_number comment))
+                (comment-treeish (alist-ref 'treeish     comment))
+                (treeish-in-map  (alist-ref line-number  line-treeish-map))
+                (comment-line-hash (alist-ref 'line_hash comment))
+                )
+          (if (not (null? comment-line-hash))
+              ; if we have a line with the same content still...
+              (if (hash-table-ref hash-line-hash-table comment-line-hash)
+                  ; add it to the list
+                  (cons comment clist)
+                  ; skip it
+                  clist
+                  )
+              ; else dealing with an old comment, with no line_hash
+              (if (equal? treeish-in-map comment-treeish)
+                  ; add it to the list
+                  (cons comment clist)
+                  ; skip it
+                  clist)
               )
-        (if (equal?
-              treeish-in-map
-              comment-treeish
-              )
-          (cons comment clist)
-          clist)
-        ); end let
+          ); end let
 
         )
         ); end lambda
@@ -348,19 +359,37 @@
    (string-split cat-command)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; map the hash to the line it came from
-(define line-hash-map
+(define line-hash-mapping
   (list-by-index line-hashes '() 1)
   )
-(define hash-line-map
-; FINISH ME
-; iterate over the line-hash-map
-; test if the value is a key
-; - if not make it a new key with the corresponding key as a value in a list
-;   e.g. 1->abc123  becomes  abc123 -> (1)
-; - if so, append the key to the value list.
-;   e.g  2->abc123 gets added to abc123 -> (1) to make abc123 -> (1 2)
-;
-  )
+
+(define hash-line-hash-table
+  (let* (
+         (initial-size
+           (if (!= (length line-hashes) 0)
+             (length line-hashes)
+             1))
+
+         (ht
+           (make-hash-table
+            equal?
+            equal?-hash
+            initial-size )))
+    (map
+     (lambda(a-pair)(let ((k (car a-pair))
+                          (v (cdr a-pair)))
+                      (if (hash-table-exists? ht k)
+                          ;append
+                          (hash-table-set!
+                           ht k
+                           (append
+                            (hash-table-ref ht k) v))
+                          (hash-table-set! ht k (list v))
+                          )
+                      ))
+     line-hash-mapping)
+
+    ht))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; sort the comments by line number (ascending)
@@ -374,10 +403,12 @@
 ; extract the applicable comments, in order
 (define (extract-applicable-comments-sorted response-json line-treeish-map)
   (let (
-        (applicable-comments (extract-applicable-comments
-              response-json line-treeish-map)))
+        (applicable-comments
+         (extract-applicable-comments response-json line-treeish-map)))
   (sort-comments-by-line applicable-comments
             )))
+
+
 (define (debug-comments response-json line-treeish-map)
   (format #t "project: ~A~%" project-name)
   (format #t "project hash: ~A~%" project-name-hash)
