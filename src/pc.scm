@@ -1,5 +1,13 @@
 #!/usr/bin/env csi -script
 
+; NOTE: This is a Functional Prototype
+; It's used both to test that the server is working
+; and provide a working example of how a client
+; would be written. Of course, it's in Scheme,
+; which is probably very different than your favorite
+; language so... yeah. 🤷
+
+
 (import args)
 (import chicken.file)
 (import chicken.format)
@@ -285,7 +293,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; find the saved comments that apply
 ; to the _current_ version of the file
-(define (extract-applicable-comments response-json line-treeish-map)
+(define (extract-applicable-comments response-json line-treeish-map hash-line-hash-table )
   ; EXAMPLE RESPONSE JSON
     ; {
     ;   "project_name_hash": "<hash here>",
@@ -310,23 +318,28 @@
         ; the same treeish this comment has associated with line x?
         (begin
           (let* (
-                (line-number     (alist-ref 'line_number comment))
-                (comment-treeish (alist-ref 'treeish     comment))
-                (treeish-in-map  (alist-ref line-number  line-treeish-map))
-                (comment-line-hash (alist-ref 'line_hash comment))
+                 (comment-hash       (alist->hash-table comment equal?))
+                 (line-number        (hash-table-ref comment-hash 'line_number))
+                 (comment-treeish    (hash-table-ref comment-hash 'treeish))
+                 (treeish-in-map     (alist-ref line-number line-treeish-map))
+                 (comment-line-hash  (hash-table-ref comment-hash 'line_hash))
                 )
           (if (not (null? comment-line-hash))
               ; if we have a line with the same content still...
               (if (hash-table-ref hash-line-hash-table comment-line-hash)
                   ; add it to the list
-                  (cons comment clist)
+                  (begin
+                    (hash-table-set! comment-hash
+                                    'line_number
+                                    (find-best-line hash-line-hash-table comment-line-hash line-number ))
+                    (cons comment-hash clist))
                   ; skip it
                   clist
                   )
               ; else dealing with an old comment, with no line_hash
               (if (equal? treeish-in-map comment-treeish)
                   ; add it to the list
-                  (cons comment clist)
+                  (cons comment-hash clist)
                   ; skip it
                   clist)
               )
@@ -335,6 +348,30 @@
         )
         ); end lambda
       '() comments-list)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; given a line-hash from a comment, find the best line number
+; this should only be called IF we've already confirmed there's
+; an entry in hash-line-hash-table,
+; so i'm skipping the error handling of it _not_ being there
+(define (find-best-line hash-line-hash-table comment-line-hash line-number)
+  (let ((lines (hash-table-ref hash-line-hash-table comment-line-hash))
+        )
+      (if (list-includes lines line-number)
+          line-number
+            ; bah. figures. line's been moved
+            ; v1 let's go with the first matching line
+            ; The "better" solution is to ask the user where they want it,
+            ; delete the old one, and create a new one on the chosen line
+            ; with the same content.
+            ; HOWEVER, this is just a functional prototype that isn't in an editor.
+            ; So, there's no context to give the user, and frequently
+            ; there's no user (just a test suite).
+          (car lines)
+
+          )
+    )
+  )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; generate a hash for a given line
 (define (hash-for-line line)
@@ -396,15 +433,15 @@
 (define (sort-comments-by-line comments-list)
   (sort comments-list
         (lambda (a b)
-          (< (alist-ref 'line_number a)
-             (alist-ref 'line_number b)))))
+          (< (hash-table-ref a 'line_number)
+             (hash-table-ref b 'line_number)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; extract the applicable comments, in order
-(define (extract-applicable-comments-sorted response-json line-treeish-map)
+(define (extract-applicable-comments-sorted response-json line-treeish-map hash-line-hash-table)
   (let (
         (applicable-comments
-         (extract-applicable-comments response-json line-treeish-map)))
+         (extract-applicable-comments response-json line-treeish-map hash-line-hash-table)))
   (sort-comments-by-line applicable-comments
             )))
 
@@ -416,7 +453,9 @@
   (let ((applicable-comments
           (extract-applicable-comments-sorted
             response-json
-            line-treeish-map)))
+            line-treeish-map
+            hash-line-hash-table
+            )))
 
     ; iterate and print
     ; each comment starts with its line number
@@ -427,11 +466,15 @@
       (begin
         (do-list comment applicable-comments
             (format #t "~A: ~A~%"
-                    (cdr (assoc 'line_number comment))
-                    (cdr (assoc 'comment     comment)))
-            (format #t "treeish: ~A~%~%"
-                    (cdr (assoc 'treeish comment))
+                    (hash-table-ref comment 'line_number)
+                    (hast-table-ref comment 'comment)
                     )
+            (format #t "treeish: ~A~%"
+                    (hash-table-ref comment 'treeish))
+            ; line_hash will be #f
+            ; if comment generated from v1 PC
+            (format #t "line_hash: ~A~%~%"
+                    (hash-table-ref comment 'line_hash))
             ); end do-list
       ); end begin
       (format #t "No comments found.")
