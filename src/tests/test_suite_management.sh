@@ -17,7 +17,7 @@ setup_suite () {
 
 	# echo "starting server"
 	# start it and have it use the disposable directory
-	PRIVATE_COMMENTS_DIR=$TEST_COMMENTS_DIR ../private_comments &
+	PRIVATE_COMMENTS_DIR=$TEST_COMMENTS_DIR ../../bin/private_comments &
 	# PRIVATE_COMMENTS_DIR=$TEST_COMMENTS_DIR ../private_comments 2> /dev/null &
 	disown
 
@@ -45,3 +45,15 @@ teardown_suite () {
 }
 
 
+## UTILITY FUNCTIONS FOR TESTS
+
+function get_line_hash() {
+	file=$1
+	line=$2
+
+	# i'm sure there's a better way than this
+	# to get just one line
+	cat $file | head -n $line | tail -n 1 \
+		| sed -e "s/^ *//" -e "s/ *$//" \
+		| sha512sum
+}

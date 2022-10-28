@@ -39,7 +39,8 @@ test_3_new_comment () {
   "file_path_hash":     "$FILE_PATH_HASH",
   "treeish":            "$TREEISH_ONE",
   "line_number":        4,
-  "comment":            "comment text here"
+  "comment":            "comment text here",
+  "line_hash":          "fake_sha256sum"
 }
 EOM
 

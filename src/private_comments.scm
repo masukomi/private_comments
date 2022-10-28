@@ -184,10 +184,13 @@
                      line_hash)))
 
 (define (files-for-treeish treeish-dir)
+  ; TODO FIXME CHANGES
+  ; now under the treeish dir are multiple line-hash dirs
+  ; and under those are the files we want.
   (if  (and (file-exists? treeish-dir) (file-readable? treeish-dir))
        (directory treeish-dir)
        '()))
-; NOTE:
+; NOTE: v1
 ; files are stored in a folder with the same name as
 ; the project hash, in a subfolder named after the treeish
 ; with a file named after the file-path-hash + the line number
@@ -202,6 +205,26 @@
 ; └── project_hash_2
 ;     └── treeish_3
 ;         └── file_hash-line_no_1.json
+;
+; NOTE: v2
+; files are stored in a folder with the same name as
+; the project hash, in a subfolder named after the treeish
+; in a subfolder named after the line hash.
+; with a file named after the file-path-hash + the line number
+;  ./
+;; └── project_hash_1
+;;     ├── treeish_1
+;;     │   └── file_hash_1
+;;     │       └── line_hash_1
+;;     │           ├── line_no_1
+;;     │           └── line_no_3
+;;     └── treeish_2
+;;         └── file_hash_1
+;;             ├── line_hash_2
+;;             │   └── line_no_3 line_no_8
+;;             └── line_hash_22
+;;                 └── line_no_5
+
 (define (files-for-file project-hash file-path-hash treeishes )
   (let ((project-dir (list->path (list base-directory project-hash)))
         (comment-maps '()))
@@ -279,10 +302,11 @@
       (let ((project-hash      (alist-ref 'project_name_hash params))
             (file-path-hash    (alist-ref 'file_path_hash params))
             (line-no           (alist-ref 'line_number params))
+            (line-hash         (alist-ref 'line_hash params))
             (treeish           (alist-ref 'treeish params))
             ; record the epoch time when the comment was added
             (dated-params
-             (if (not (json-hash-key? params 'saved_at))
+             (if (not (json-has-key? params 'saved_at))
                  (cons (list 'saved_at (current-seconds)) params)
                  (begin
                    (set-cdr! (assoc 'saved_at params) (current-seconds))
@@ -291,16 +315,15 @@
              )
             )
         (let* (
-              (project-dir (list->path (list base-directory project-hash)))
-              (treeish-dir (list->path (list base-directory project-hash treeish)))
-              (file-name (sprintf "~A-~A.json" file-path-hash line-no))
-              (inter-repo-file-name (list->path (list treeish file-name)))
-              (file-path (list->path
-                           (list treeish-dir
-                                 file-name)))
+              (project-dir          (list->path (list base-directory project-hash)))
+              ; gotta say, <line_no>.json, eg 4.json _feels_ really stupid
+              (our-file-name            (sprintf "~A.json" line-no))
+              (intra-repo-file-name (list->path (list treeish file-path-hash line-hash our-file-name)))
+              (line-hash-dir        (list->path (list base-directory project-hash treeish file-path-hash line-hash)))
+              (file-path            (list->path (list line-hash-dir our-file-name)))
               )
 
-          (guarantee-dir treeish-dir)
+          (guarantee-dir line-hash-dir)
           (guarantee-git-project project-dir)
           ; TODO switch on add-or-delete
           (if (equal? add-or-delete 'add)
@@ -310,15 +333,15 @@
               ; guarantees consistent formatting
               ; passes _everything_ to the filesystem
               ; including unexpected key value pairs
-              (add-note-to-git project-dir inter-repo-file-name))
+              (add-note-to-git project-dir intra-repo-file-name))
             ; else DELETE...
-            (remove-note-from-git project-dir inter-repo-file-name)
+            (remove-note-from-git project-dir intra-repo-file-name)
           )
           (send-response
             headers: pc-headers
             status: 'ok
             body: (if (equal? add-or-delete 'add)
-                    (sprintf "{\"status\": \"SUCCESS\", \"description\": \"~A written\"}" file-name )
+                    (sprintf "{\"status\": \"SUCCESS\", \"description\": \"~A written\"}" our-file-name )
                     "{\"status\": \"SUCCESS\", \"description\": \"comment removed\"}"  ))
           ) ; end let*
       ) ; end if true's let let

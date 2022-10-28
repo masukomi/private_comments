@@ -26,7 +26,8 @@ test_2_no_comments () {
 
 # # test that it lets you create a comment
 test_3_new_comment () {
-	response=$($REPO_ROOT/src/pc -f src/comment-recording.scm -c "my comment" -l 1 2>/dev/null)
+	line_hash=$(get_line_hash src/comment-recording.scm 1)
+	response=$($REPO_ROOT/src/pc -f src/comment-recording.scm -c "my comment" -l 1 -g $line_hash 2>/dev/null)
 	assert_equals "" "$response" "pc returned unexpected response when creating comment"
 
 	assert "test -e \"$TEST_COMMENTS_DIR/e928d49542ea19c66589897e0ee7160c09947b0b92d73b029b28d591aeaf5cb4/93569b7b/a5ecf5465d3e93f71e6af298255cd672046ce7424d6019c6586181c1cf82d989-1.json\"" "json file not created"
