@@ -1,6 +1,9 @@
 #! /bin/bash
 # Builds a Docker environment for building private_comments.
 # Run from the project root:
-# 	./build/make.buildenv.sh
+# 	./linux/make.buildenv.sh
 
-docker build -t buildenv -f build/Dockerfile .
+set -x
+set -euo pipefail
+
+docker build -t private_comments_buildenv -f linux/Dockerfile .
