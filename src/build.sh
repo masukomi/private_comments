@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # required libraries
 
@@ -56,8 +56,9 @@ if [ "$1" != "" ]; then
   perl -pi -e "s/$1/VERSION_NUMBER_HERE/" pc.scm
   perl -pi -e "s/$1/VERSION_NUMBER_HERE/" private_comments.scm
 fi
-ARCHITECTURE=$(arch)
-version_dir="private_comments_"$ARCHITECTURE"_"$VERSION
+readonly OS="$(uname)"
+readonly ARCHITECTURE=$(arch)
+readonly version_dir="../bin/private_comments_${OS}_${ARCHITECTURE}_${VERSION}"
 echo "creating compressed release file..."
 echo "  $version_dir.tgz"
 rm -rf $version_dir
@@ -79,7 +80,7 @@ rm -rf $version_dir
 echo "here's your SHA for homebrew"
 shasum -a 256 $version_dir.tgz
 
-function print_dlibs () {
+function print_dlibs() {
   binary=$1
   echo "DLIBS used by $binary:"
 
@@ -95,8 +96,11 @@ function print_dlibs () {
 }
 
 echo "===================="
-print_dlibs "../bin/private_comments"
-print_dlibs "../bin/pc"
+
+if [[ "${OS}" == "Darwin" ]]; then
+  print_dlibs "../bin/private_comments"
+  print_dlibs "../bin/pc"
+fi
 
 echo "===================="
 echo "Done."
