@@ -176,6 +176,16 @@ You could use this as a quick starting point for an editor plugin, or tweak the 
 
 ## Building From Source
 
+There are two ways to build from source:
+
+- [Manual approach](#manual-approach): this is the original way for building
+  from source; and
+- [Docker-based approach](#docker-based-approach): you can use this approach to
+  build a Linux binary without needing any additional tools besides
+  [Docker](https://docker.io).
+
+### Manual approach
+
 Once you've cloned this repo you'll need to install [Chicken Scheme](https://www.call-cc.org/) and then run the `install_chicken_eggs.sh` script in the `src` directory. 
 
 If you're hacking on it I recommend running it with `csi`
@@ -198,6 +208,25 @@ $ bash_unit tests/test_client
 
 If it's running `private_comments` will be shut down, and a new instance will be run. The new instance will store its test data separately so you don't have to worry about messing up, or loosing, any existing comments you may have created with private comments.
 
+### Docker-based approach
+
+From the project root directory, run:
+
+```sh
+./linux/make.release.sh
+```
+
+Once the process is completed, this will produce 64-bit Linux binaries in the
+`bin/` directory and an archive with the binaries packaged.  When you run the
+command for the first time, it will take a bit to build the docker container
+used for the build. Subsequent runs will be much faster.
+
+It is possible to build a numbered version by passing the version in the
+environment variable `BUILD_VERSION` as follows:
+
+```sh
+env BUILD_VERSION=1.2.3 ./linux/make.release.sh
+```
 
 ## Contributing
 
