@@ -1,5 +1,10 @@
 #!/usr/bin/env csi -script
 
+; This is a proof-of-concept command line client for private comments.
+; Use it for testing server changes, and to understand what functionality you'd
+; need to implement to create a private comments plugin for your
+; favorite text editor.
+
 (import args)
 (import chicken.file)
 (import chicken.format)
