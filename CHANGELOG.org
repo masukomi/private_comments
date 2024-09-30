@@ -1,0 +1,19 @@
+#+title: Changelog
+
+* v2.0.0
+⚠️ WARNING THIS RELEASE CONTAINS BREAKING CHANGES
+See upgrade instructions below.
+
+** CHANGES
+- By default, data is now stored under =XDG_DATA_HOME/private_comments= instead of =~/.config/private_comments=
+
+** Upgrade Instructions
+- If you have /not/ set a custom location for data storage via the =PRIVATE_COMMENTS_DIR= environment variable then you should move your data directory to the new location before launching the v1.0.0 server
+
+  The new location is =XDG_DATA_HOME/private_comments= The default location for =XDG_DATA_HOME= is =~/.local/share=
+
+  Most people will just want to run this.
+
+  #+begin_src
+  mv ~/.config/private_comments ~/.local/share/private_comments
+  #+end_src
