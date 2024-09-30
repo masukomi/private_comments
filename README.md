@@ -42,7 +42,7 @@ Note: _Private Comments currently assumes you're using git for your version cont
 * Comments are tied to a specific commit. Each comment is associated with the commit that produced the line you're commenting on. When that line is no longer in the file, the comment will disappear. However, if you roll back your git repository to a prior commit, it will _reappear_ so you can see any comments that were relevant at the time.
 * Comments created with Private Comments are stored in a sharable git repository. A group of freelancers working on a client codebase can leave inline comments for each other as they learn the codebase without altering the source code itself. 
 * Project names and file names are _never_ stored. This way you can back up your private comments repo to a third party server without violating your NDA. If the third party server is compromised the hackers won't be able to derive anything from a leaked filename or project name. If you're not encrypting your comments then you just need to be careful to not include any secrets in your comments.
-* Comments can be encrypted. Encryption is _optionally_ handled on the client side. The Private Comments server only cares that you're passing it a string. It doesn't care what that string is. Encryption / Decryption is fairly easy to add to any private comments browser plugin. 
+* Comments can be encrypted. Encryption is _optionally_ handled on the client side. The Private Comments server only cares that you're passing it a string. It doesn't care what that string is. Encryption / Decryption is fairly easy to add to any private comments editor plugin. 
 
 
 
