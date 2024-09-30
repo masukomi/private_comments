@@ -17,8 +17,9 @@
 # spiffy-request-vars
 # uri-common
 
+set +e
 
-VERSION="dev_version"
+VERSION="dev_version-"$(date  "+%y-%m-%d")
 if [ "$1" != "" ]; then
   VERSION=$1
   perl -pi -e "s/VERSION_NUMBER_HERE/$1/" pc.scm
@@ -58,10 +59,10 @@ if [ "$1" != "" ]; then
 fi
 readonly OS="$(uname)"
 readonly ARCHITECTURE=$(arch)
-readonly version_dir="../bin/private_comments_${OS}_${ARCHITECTURE}_${VERSION}"
+readonly version_dir="../builds/private_comments_${OS}_${ARCHITECTURE}_${VERSION}"
 echo "creating compressed release file..."
 echo "  $version_dir.tgz"
-rm -rf $version_dir
+rm -rf $version_dir # delete it if it already exists
 mkdir $version_dir
 cp private_comments $version_dir/
 cp pc $version_dir/
@@ -69,6 +70,7 @@ cp pc $version_dir/
 # move them to the bin directory so that
 # you have a dir you can add to your path
 # that always has the latest executable in it
+echo "copying private_comments & pc executables to ../bin"
 mkdir -p ../bin
 mv private_comments ../bin/
 mv pc ../bin/
