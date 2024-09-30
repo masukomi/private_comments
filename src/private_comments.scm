@@ -3,7 +3,7 @@
 ; This serves as the persistence layer to the various
 ; Private Comments editor plugins.
 ;
-; By default the server will run on port
+; By default the server will run on port 5749
 ; If you define the PRIVATE_COMMENTS_PORT environment variable
 ; it will use that instead.
 ;
@@ -11,7 +11,8 @@
 ; a pre-commit hook it _will_ be disabled in the Private Comments
 ; repos _unless_ you set the PRIVATE_COMMENTS_ALLOW_PRE_COMMIT=true
 ;
-; Data will be stored in ~/.config/private_comments
+; By default, data will be stored in XDG_DATA_HOME/private_comments
+; ~/.config/private_comments
 ; If you define the PRIVATE_COMMENTS_DIR evironment variable
 ; it will use that instead.
 
@@ -56,7 +57,7 @@
 (define base-directory
   (let ((home (get-environment-variable "HOME")))
     (if (not (get-environment-variable "PRIVATE_COMMENTS_DIR"))
-      (list->path (list home ".config" "private_comments"))
+      (list->path (list home ".local" "share" "private_comments"))
       (get-environment-variable "PRIVATE_COMMENTS_DIR"))))
 (print "Private Comments server VERSION_NUMBER_HERE")
 (print (sprintf "Base Directory: ~A~%" base-directory) )
@@ -334,6 +335,8 @@
       (treeishes
         (delete-duplicates
           (string-split (params 'treeishes as-string) "," #t)) ))
+      ; end param parsing
+
       (send-response
         headers: pc-headers
         status: 'ok
