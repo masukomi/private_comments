@@ -13,6 +13,7 @@ chicken-install intarweb
 chicken-install linenoise
 chicken-install medea
 chicken-install message-digest
+chicken-install message-digest-utils
 chicken-install sha2
 chicken-install shell
 chicken-install simple-exceptions

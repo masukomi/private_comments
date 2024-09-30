@@ -34,6 +34,7 @@
 (import filepath)
 (import intarweb)
 (import medea)
+(import sha256-primitive message-digest-byte-vector)
 (import simple-loops)
 (import spiffy)
 (import spiffy-request-vars)
@@ -136,7 +137,6 @@
     (read-json
       (read-file-contents file-path))))
 
-
 (define (request->data request)
   (if (request-has-message-body?)
       (let ((raw-json (request-body request)))
@@ -228,6 +228,14 @@
         (cons 'file_path_hash file-path-hash)
         (cons 'comments (list->vector comments-list))
         )))
+
+(define (generate-line-hash line)
+  ; generate sha255 hash
+  (message-digest-string (sha256-primitive)
+    ; downcase
+    (string-downcase
+      ; remove ALL whitespace
+      (irregex-replace/all '(+ whitespace) line ""))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Start Handling Web Requests
