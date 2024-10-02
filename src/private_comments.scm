@@ -442,6 +442,17 @@ Key order doesn't matter.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; WTF is this you've sent me?
+(doc-fun "handle-unknown-request"
+
+"## Private: handle-unknown-request [request]
+
+### Parameters:
+* request - Spiffy request
+
+The request here is assumed to not match any
+expected endpoints and will be treated as such.
+"
+)
 (define (handle-unknown-request request)
   (let* ((request (current-request))
          (uri (request-uri request))
