@@ -64,22 +64,42 @@
     (if (not (get-environment-variable "PRIVATE_COMMENTS_DIR"))
       (list->path (list home ".local" "share" "private_comments"))
       (get-environment-variable "PRIVATE_COMMENTS_DIR"))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; print basic info for people running it
 (print "Private Comments server VERSION_NUMBER_HERE")
 (print (sprintf "Base Directory: ~A~%" base-directory) )
 (print "  Details: https://github.com/masukomi/private_comments/")
 
+(doc-fun "guarantee-dir"
 
+"## Private: guarantee-dir [dir-path]
+Guarantees that the specified directory exists.
+
+### Parameters:
+* dir-path - String a path to a directory that may or may not exist")
 (define (guarantee-dir dir-path)
   (if (not (file-exists? dir-path))
     (begin
       ; (format (current-error-port) "XXX didn't exist. creating: ~A~%" dir-path)
       ; (create-directory dir-path 'with-parents) ; <-- doesn't work!!
-      (run ,(sprintf "mkdir -p ~A" dir-path))
-      )
+      (run ,(sprintf "mkdir -p ~A" dir-path)))))
 
-    )
+(doc-fun "guarantee-git-project"
 
-  )
+"## Private: guarantee-git-project [project-dir-path]
+Tests if the indicated directory is a git repository
+by looking for the .git dir within. If it's not present
+it will initialize a git repo within it.
+
+### Parameters:
+* project-dir-path - String a directory path
+
+### Notes:
+This is _not_ a generic function, that could do things like create bare repos.
+Instead it is intended to create the repo that private comments will use to store
+a project's comments in.
+")
 (define (guarantee-git-project project-dir-path)
   (let ((git-dir-path (list->path (list project-dir-path ".git"))))
     (guarantee-dir project-dir-path)
