@@ -288,16 +288,27 @@ but repeated things like blank lines will have many.
 ; Start Handling Web Requests
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Store a new comment
-;
-; Expected JSON input (key order doesn't matter)
-; {
-;   project_name_hash: "<project name hash>",
-;   file_path_hash: "<file path hash>",
-;   line_number: <line number>,
-;   treeish: "<treeish>",
-;   comment: "comment text here"
-; }
+(doc-fun "handle-comments-post"
+"## Private: handle-comments-post [request]
+Records a new / updated comment.
+
+### Parameters:
+* request - Spiffy request
+
+The request's data is expected to be JSON with the following structure.
+Key order doesn't matter.
+
+```
+{
+  project_name_hash: \"<project name hash>\",
+  file_path_hash: \"<file path hash>\",
+  line_number: <line number>,
+  treeish: \"<treeish>\",
+  comment: \"comment text here\"
+}
+```
+
+")
 (define (handle-comments-post request)
     ; ( (project_name_hash . 1aabeb680a9ed12e4fb53d529513a2aa58341f5cfd0f7790c96388cbddbd5493)
     ;   (file_path_hash . 00c5f3f22a7c1dc3b2e377b650276b6027642ba5b21dc3bb132997f39065870a)
@@ -307,15 +318,28 @@ but repeated things like blank lines will have many.
       (handle-comment 'add (request->data request)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Delete a comment
-; /comments
-;
-; Expected JSON input (key order doesn't matter)
-; {
-;   project_name_hash: "<project name hash>",
-;   file_path_hash: "<file path hash>",
-;   line_number: <line number>,
-;   treeish: "<treeish>"
-; }
+; DELETE /comments
+
+(doc-fun "handle-comments-delete"
+"## Private: handle-comments-delete [request]
+Deletes an existing comment, if found.
+
+### Parameters:
+* request - Spiffy request
+
+The request's data is expected to be JSON with the following structure.
+Key order doesn't matter.
+
+```
+{
+  project_name_hash: \"<project name hash>\",
+  file_path_hash: \"<file path hash>\",
+  line_number: <line number>,
+  treeish: \"<treeish>\"
+}
+```
+"
+)
 (define (handle-comments-delete request)
   (handle-comment 'delete (uri-query (request-uri request)) ))
 
@@ -380,7 +404,20 @@ but repeated things like blank lines will have many.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Request a comment
-; /comments?project_name_hash=<hash_here>&file_path_hash=<hash_here>&treeishes=a,b,c
+; GET /comments?project_name_hash=<hash_here>&file_path_hash=<hash_here>&treeishes=a,b,c
+(doc-fun "handle-comments-get"
+
+"## Private: handle-comments-get [request]
+
+### Parameters:
+* request - Spiffy request
+
+#### Query String Parameters
+* project_name_hash - a sha256 hash of the project name
+* file_path_hash    - a sha256 hash of the path to the file
+* treeishes         - a comma separated list of treeishes that are present in the
+                      current version of the file according to git blame
+")
 (define (handle-comments-get request)
   (let*
     (
