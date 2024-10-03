@@ -135,10 +135,22 @@ a project's comments in.
 ; makes sure that if any pre-commit files came along for the
 ; ride in the `git init` phase they are disabled
 ; this could happen (and did) as the result of a global templatdir config
+(doc-fun "disable-pre-commits"
+"## Private: disable-pre-commits [project-dir-path git-dir-path]
+If the user has configured git templates for new repos then
+pre-commit hooks may show up when we init a new dir for
+storing private comments in.
+
+### Parameters:
+* project-dir-path - String - a path to the directory containing this projects private comments
+* git-dir-path - String - a path to the .git dir within the project
+
+### Notes:
+You can override this behavior by setting
+PRIVATE_COMMENTS_ALLOW_PRE_COMMIT to \"true\"
+")
 (define (disable-pre-commits project-dir-path git-dir-path)
-  (if (not
-       (equal? (get-environment-variable "PRIVATE_COMMENTS_ALLOW_PRE_COMMIT")
-            "true"))
+  (if (not (equal? (get-environment-variable "PRIVATE_COMMENTS_ALLOW_PRE_COMMIT") "true"))
     ; If "true", I hope you know what you're doing. ;)
     (let ((pre-commit-path (list->path (list git-dir-path "hooks" "pre-commit"))))
         (if (and (file-exists? pre-commit-path) (file-executable? pre-commit-path))
@@ -148,14 +160,27 @@ a project's comments in.
               ; _in this repo only_
               (run (sprintf "cd ~A; git config advice.ignoredHook false" project-dir-path))
               )))))
+(doc-fun "add-note-to-git"
 
+"## Private: add-note-to-git [project-dir-path note-file]
+
+### Parameters:
+* project-dir-path - String - the path to the directory containing the private comments for this project
+* note-file - String - the path to the file we will be commiting in git.
+")
 (define (add-note-to-git project-dir-path note-file)
   ; NOTE: if you push the same note twice git will have a non-zero exit code here.
   ; Intentionally ignoring it.
   ; (format (current-error-port) "XXX adding ~A to dir ~A~%" note-file project-dir-path)
   (run* ,(sprintf "cd ~A; git add ~A && git commit -m \"added note\"" project-dir-path note-file)))
 
+(doc-fun "remove-note-from-git"
 
+"## Private: remove-note-from-git [project-dir-path note-file]
+removes a previously saved note from the git repo.
+This happens when someone deletes a comment.
+
+")
 (define (remove-note-from-git project-dir-path note-file)
   ; NOTE: Intentionally ignoring any complaints about file not existing
   ; & NOT checking if file exists because it may have been
