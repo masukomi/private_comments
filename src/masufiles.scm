@@ -6,6 +6,7 @@
    directory-separator-string
    string->file
    file->string
+   file->lines
   )
   (import scheme)
   (import srfi-13)
@@ -46,6 +47,11 @@
                     (string-append file-contents c))
                   (loop (read-line fh))))) )
       file-contents))
+
+  ; returns a list of lines contained within
+  ; the file at the specified path
+  (define (file->lines file-path)
+    (read-lines (open-input-file file-path)))
 
   (define (file->string file-path)
     (read-file-contents file-path))
