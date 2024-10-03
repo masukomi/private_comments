@@ -52,18 +52,40 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Figure out what port we're running on
+(doc-fun "listening-port"
+
+"## Private: listening-port
+
+### Returns:
+Returns the port number that this server will use.
+Uses whatever is specified in PRIVATE_COMMENTS_PORT
+or 5749 if nothing is specified.
+")
 (define listening-port
   (if (not (get-environment-variable "PRIVATE_COMMENTS_PORT"))
       5749
       (string->number (get-environment-variable "PRIVATE_COMMENTS_PORT"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
+(doc-fun "base-directory"
+
+"## Private: base-directory
+
+### Returns:
+Returns the directory where private comments data will be stored.
+uses PRIVATE_COMMENTS_DIR if specified,
+or XDG_DATA_HOME/private_comments if not.")
 (define base-directory
-  (let ((home (get-environment-variable "HOME")))
-    (if (not (get-environment-variable "PRIVATE_COMMENTS_DIR"))
-      (list->path (list home ".local" "share" "private_comments"))
-      (get-environment-variable "PRIVATE_COMMENTS_DIR"))))
+  ; get-environment-variable returs #f if it's not found
+  (let ((home           (get-environment-variable "HOME"))
+        (pc-dir         (get-environment-variable "PRIVATE_COMMENTS_DIR"))
+        (xdg-data-home  (get-environment-variable "XDG_DATA_HOME"))
+        )
+    (if (not pc-dir)
+        (if (not xdg-data-home)
+          (list->path (list home ".local" "share" "private_comments"))
+          (list->path (list xdg-data-home "private_comments")  ))
+        pc-dir)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; print basic info for people running it
