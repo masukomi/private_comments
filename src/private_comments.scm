@@ -348,7 +348,7 @@ and each \"value\" is a list of integers (line numbers). The vast
 majority of hashes will only have one corresponding line number,
 but repeated things like blank lines will have many.
 ")
-(define generate-line-hashes-lookup line-hashes
+(define (generate-line-hashes-lookup line-hashes)
   ; iterate over line-hashes list
   ; create associated list pairing that line hash with a list
   ;   of line numbers on which it appears (almost always just one element in list)
