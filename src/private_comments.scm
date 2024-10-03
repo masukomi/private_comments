@@ -31,6 +31,7 @@
 (import srfi-13)
 (import srfi-18); multithreading support
 (import srfi-1) ; (a)list library + first, and last
+(import srfi-69); hash tables
 (import filepath)
 (import intarweb)
 (import medea)
@@ -353,7 +354,19 @@ but repeated things like blank lines will have many.
   ; create associated list pairing that line hash with a list
   ;   of line numbers on which it appears (almost always just one element in list)
   ; return that associative list
-  )
+  ;
+  (let ((hash-to-list (make-hash-table equal?))
+        (counter 1)
+        )
+    (do-list var line-hashes
+             (lambda (h)(progn
+                         ; make sure there's a list value to shove data into
+                         (if (not (hash-table-exists? hash-to-list var))
+                             (hash-table-set! hash-to-list var '()))
+                         (hash-table-set! hash-to-list var (cons (hash-table-ref var) counter))
+                         (set! counter (+ counter 1)) ;increment the line counter
+                         )))
+    hash-to-list))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
