@@ -88,6 +88,31 @@ PRIVATE_COMMENTS_ALLOW_PRE_COMMIT to \"true\"
               )))))
 
 
+(doc-fun "filename->path-hash"
+
+
+"## Private: filename->path-hash [filename]
+extracts the path hash from a filename that is expected to also contain a line
+number and a suffix.
+
+### Parameters:
+* filename - a Private Comments file name. These take the form of
+             <file path hash>-<line_number>.json
+
+### Returns:
+The 65 character Sha256 hash at the beginning of the file name
+or \"NOT-A-COMMENT-FILE\" if the filename doesn't appear to match
+our naming convention.
+
+If this ever returns \"NOT-A-COMMENT-FILE\" it means someone's been
+mucking about with directories they shouldn't.
+
+### Notes:
+The test for file name format is simplistic at best, but
+as we should be the ones creating files in these directories
+we shouldn't have to worry much.
+
+")
 (define (filename->path-hash filename)
   ; SHA 256 hashes are 65 chars long
   ; filenames are <sha 256 hash>-<line number>.json
