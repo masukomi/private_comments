@@ -30,6 +30,7 @@ echo "Building libraries for $VERSION"
 
 csc -static -unit masutils -cJ masutils.scm
 csc -static -unit masufiles -cJ masufiles.scm
+csc -static -unit private-utils -cJ private-utils.scm
 csc -static -unit masurequests -cJ masurequests.scm
 csc -static -unit pathname-expand -cJ pathname-expand.scm
 csc -static -unit comment-recording -cJ comment-recording.scm

@@ -47,6 +47,7 @@
 (import masutils)
 (import masufiles)
 (import mdcd-config mdcd)
+(import private-utils)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Make sure Prerequisets are met
@@ -94,73 +95,6 @@ or XDG_DATA_HOME/private_comments if not.")
 (print (sprintf "Base Directory: ~A~%" base-directory) )
 (print "  Details: https://github.com/masukomi/private_comments/")
 
-(doc-fun "guarantee-dir"
-
-"## Private: guarantee-dir [dir-path]
-Guarantees that the specified directory exists.
-
-### Parameters:
-* dir-path - String a path to a directory that may or may not exist")
-(define (guarantee-dir dir-path)
-  (if (not (file-exists? dir-path))
-    (begin
-      ; (format (current-error-port) "XXX didn't exist. creating: ~A~%" dir-path)
-      ; (create-directory dir-path 'with-parents) ; <-- doesn't work!!
-      (run ,(sprintf "mkdir -p ~A" dir-path)))))
-
-(doc-fun "guarantee-git-project"
-
-"## Private: guarantee-git-project [project-dir-path]
-Tests if the indicated directory is a git repository
-by looking for the .git dir within. If it's not present
-it will initialize a git repo within it.
-
-### Parameters:
-* project-dir-path - String a directory path
-
-### Notes:
-This is _not_ a generic function, that could do things like create bare repos.
-Instead it is intended to create the repo that private comments will use to store
-a project's comments in.
-")
-(define (guarantee-git-project project-dir-path)
-  (let ((git-dir-path (list->path (list project-dir-path ".git"))))
-    (guarantee-dir project-dir-path)
-    (if (not (file-exists? git-dir-path))
-          (begin
-            (print (sprintf "initializing repo in ~A" project-dir-path) )
-            (run ,(sprintf "cd ~A;git init" project-dir-path))
-            (disable-pre-commits project-dir-path git-dir-path)
-            ))))
-
-; makes sure that if any pre-commit files came along for the
-; ride in the `git init` phase they are disabled
-; this could happen (and did) as the result of a global templatdir config
-(doc-fun "disable-pre-commits"
-"## Private: disable-pre-commits [project-dir-path git-dir-path]
-If the user has configured git templates for new repos then
-pre-commit hooks may show up when we init a new dir for
-storing private comments in.
-
-### Parameters:
-* project-dir-path - String - a path to the directory containing this projects private comments
-* git-dir-path - String - a path to the .git dir within the project
-
-### Notes:
-You can override this behavior by setting
-PRIVATE_COMMENTS_ALLOW_PRE_COMMIT to \"true\"
-")
-(define (disable-pre-commits project-dir-path git-dir-path)
-  (if (not (equal? (get-environment-variable "PRIVATE_COMMENTS_ALLOW_PRE_COMMIT") "true"))
-    ; If "true", I hope you know what you're doing. ;)
-    (let ((pre-commit-path (list->path (list git-dir-path "hooks" "pre-commit"))))
-        (if (and (file-exists? pre-commit-path) (file-executable? pre-commit-path))
-            (begin
-              (set-file-permissions! pre-commit-path 660)
-              ; now disable the git warning about it not being executable
-              ; _in this repo only_
-              (run (sprintf "cd ~A; git config advice.ignoredHook false" project-dir-path))
-              )))))
 (doc-fun "add-note-to-git"
 
 "## Private: add-note-to-git [project-dir-path note-file]
@@ -188,24 +122,27 @@ This happens when someone deletes a comment.
   ; deleted from working dir manually but not removed from git.
   (run* ,(sprintf "cd ~A; git rm -f ~A && git commit -m \"deleting comment\"" project-dir-path note-file)))
 
+(doc-fun "strip-redundant-json-data"
 
-(define (filename->path-hash filename)
-  ; SHA 256 hashes are 65 chars long
-  ; filenames are <sha 256 hash>-<line number>.json
-  (if (> (string-length filename) 64)
-      (substring filename 0 64)
-      "NOT-A-COMMENT-FILE"))
+"## Private: strip-redundant-json-data [json-data]
 
-(define (strip-redundant-data json-data)
+Removes fields from the data supplied by a user
+so that redundant data isn't saved in every note for
+a given project or file.
+
+### Parameters:
+* json-data - alist - data provided by the client to be stored as a comment
+"
+         )
+(define (strip-redundant-json-data json-data)
   (alist-delete 'project_name_hash
       (alist-delete 'file_path_hash json-data)))
-
 
 
 ;TODO add error handling
 ;WARNING: will blow up if file doesn't contain json
 (define (json-file-path->data file-path)
-  (strip-redundant-data
+  (strip-redundant-json-data
     (read-json
       (read-file-contents file-path))))
 
@@ -216,10 +153,39 @@ This happens when someone deletes a comment.
         )
       '()))
 
+(doc-fun "method-with-body?"
+
+"## Private: method-with-body method
+Tests if the provided method is POST or PUT.
+
+Those are the only methods expected to have a body.
+
+### Parameters:
+* method - a Spiffy method
+
+### Returns:
+`#t` or `'()`
+
+")
 (define (method-with-body? method)
     (or (eq? 'POST method)
         (eq? 'PUT method)))
 
+(doc-fun "request-body"
+
+" ## Private: request-body request
+Extracts the request body from the request.
+
+### Parameters:
+* request - Spiffy request
+
+### Returns:
+Returns a string or '()
+
+### Notes:
+⚠️ Only supports url-encoded request bodies
+_not_ multipart.
+")
 (define (request-body request)
   (if (method-with-body? (request-method request))
       (let (
@@ -229,10 +195,20 @@ This happens when someone deletes a comment.
           (read-string len p)
         )
     '()))
-  ;WARNING: only supports url-encoded post body
-  ;          not multipart
 
 
+(doc-fun "pc-headers"
+
+"## Private: pc-headers
+a list of response headers.
+
+### Notes:
+It's a normal list with multiple elements
+and not an alist or hash because that's what
+Spiffy wants
+
+"
+)
 (define pc-headers
   (list (list 'content-type "application/json")))
 
@@ -254,25 +230,73 @@ This happens when someone deletes a comment.
                      treeish
                      line_number)))
 
+
+(doc-fun "files-for-treeish"
+
+"## Private: files-for-treeish [treeish-dir]
+
+This returns a list of comment files
+that were associated with the commit treeish.
+
+### Parameters:
+* treeish-dir - A treeish corresponding to a commit in the project
+                that has associated notes. It's also the name of
+                a directory where we store those notes.
+
+### Returns:
+A list of file names contained within the directory
+matching the specified treeish or an empty list.
+
+### Notes:
+See `files-for-file` documentation for info on the file structure.
+")
 (define (files-for-treeish treeish-dir)
   (if  (and (file-exists? treeish-dir) (file-readable? treeish-dir))
        (directory treeish-dir)
        '()))
-; NOTE:
-; files are stored in a folder with the same name as
-; the project hash, in a subfolder named after the treeish
-; with a file named after the file-path-hash + the line number
-;
-; .
-; ├── project_hash_1
-; │   ├── treeish_1
-; │   │   ├── file_hash-line_no_1.json
-; │   │   └── file_hash-line_no_2.json
-; │   └── treeish_2
-; │       └── file_hash-line_no_3.json
-; └── project_hash_2
-;     └── treeish_3
-;         └── file_hash-line_no_1.json
+
+
+(doc-fun "files-for-files"
+
+"## Private: files-for-file [project-hash-file-path-hash treeishes]
+
+
+
+### Notes:
+Files are stored in a folder with the same name as
+the project hash, in a subfolder named after the treeish
+with a file named after the file-path-hash + the line number
+
+I.e. `<project_hash>/<project_commit_treeish>/<file_path_hash>-<line_number>.json`
+
+The project hash, commit treeish, and file path hash are all provided by
+the client.
+
+* project hash - typically just a hash of the name of the root folder containing the project
+                 May or may not be salted.
+* treeish      - a commit treeish in the project which a user has associated a comment with.
+                 Salting this would make life difficult for the client
+                 and not buy any real security.
+* file hash    - a hash of the relative file path from the root of the project
+                 E.g. foo/bar/baz.txt would be passed as
+                 3de0caa67fb2b4de41f1639e77c3b424bf87972f8002f0cbf0e8505b31584c54
+* line number  - the line number the user has associated the comment with
+                 Note that the actual line number may have changed since
+                 this was recorded.
+
+```
+  .
+  ├── project_hash_1
+  │   ├── treeish_1
+  │   │   ├── file_hash-line_no_1.json
+  │   │   └── file_hash-line_no_2.json
+  │   └── treeish_2
+  │       └── file_hash-line_no_3.json
+  └── project_hash_2
+      └── treeish_3
+          └── file_hash-line_no_1.json
+```
+")
 (define (files-for-file project-hash file-path-hash treeishes )
   (let ((project-dir (list->path (list base-directory project-hash)))
         (comment-maps '()))
@@ -293,6 +317,24 @@ This happens when someone deletes a comment.
 
     comment-maps))
 
+(doc-fun "comments-json"
+
+"## Private: comments-json project-hash file-path-hash comments-list
+Generates a JSON string with the comments that should be included
+in the response body.
+
+### Parameters:
+* project-hash   - A hash string - typically of the project name
+* file-path-hash - A hash string of the path within the project to the file
+* comments-list  - A list of comments for the file in question.
+                   This will have been generated by a call to `files-for-file`
+
+### Notes:
+See the documentation for `files-for-file`
+to understand how project hashes and file path hashes
+correspond to files
+
+")
 (define (comments-json project-hash file-path-hash comments-list)
   (json->string
     (list
@@ -330,7 +372,7 @@ generate-line-hash
 
   (let ((hashes '()))
 
-  (do-list var (read-lines (open-input-file file-path))
+  (do-list var (file->lines file-path)
            (set! hashes (cons hashes (generate-line-hash var))))
     hashes))
 
@@ -367,6 +409,35 @@ but repeated things like blank lines will have many.
                          (set! counter (+ counter 1)) ;increment the line counter
                          )))
     hash-to-list))
+
+(doc-fun "file-to-commit-hashes"
+
+"## Private: file-to-commit-hashes [file-path]
+Queries git for \"blame\" information about the specified
+file and creates a unique list of the hashes it returns
+as being part of the current file's data.
+
+### Returns:
+An list of unique strings. Each string is a short treeish from git.
+")
+(define (file-to-commit-hashes file-path)
+  ; the first 8 characters of every line are a git treeish
+  (let (treeishes '())
+    (do-list var (read-lines
+                    (capture ,(sprintf
+                            "cd $(dirname ~A); git blame $(basename ~A)"
+                            file-path
+                            file-path)))
+      ; var is a line like
+      ; 1942e1ee src/pc.scm               (masukomi          2019-07-21 23:19:24 -0400 644) (start-server)
+      (set treeishes
+           (cons treeishes
+                 ; the 1st 8 chars are always the treeish
+                 (car (string-chop var 8) ) )))
+
+    (delete-duplicates treeishes)))
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
