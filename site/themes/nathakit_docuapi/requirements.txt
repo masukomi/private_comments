@@ -1,1 +1,1 @@
-Pygments==2.15.0
+Pygments==2.20.0
